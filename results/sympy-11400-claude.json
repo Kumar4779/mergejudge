@@ -1,0 +1,13 @@
+{
+  "task": "sympy__sympy-11400",
+  "agent": "claude-code (Opus, Claude Pro)",
+  "fail_to_pass": {"passed": 2, "total": 2},
+  "pass_to_pass_named": {"passed": 29, "total": 29},
+  "diff_lines_added": 14,
+  "files_touched": ["sympy/printing/ccode.py"],
+  "test_file_touched": false,
+  "agent_time_s": 41,
+  "cost_note": "Claude Pro subscription - no per-run API charge",
+  "verdict": "resolved",
+  "grading": "agent patch + test_patch applied to a fresh worktree at base commit; full test_ccode.py run: 32 passed"
+}
