@@ -1,25 +1,28 @@
-"""MergeJudge scorer v1 - grade one agent patch for one SWE-bench task.
+"""MergeJudge scorer v2 - grade one agent patch for one SWE-bench task.
 
-The recipe (done by hand 3 times on 2026-11-19: baseline, gold, agent):
+The recipe (proven by hand on sympy-11400 on 2026-11-19 and on
+django-10914 on 2026-11-21):
   1. Fresh worktree at the task's base commit (clean checkout).
   2. Anti-cheat: a patch touching a test file or test config is
      disqualified before any test runs.
   3. Apply the agent patch, then the task's test patch.
-  4. Run the grading test files with the task's own Python env,
+  4. Run the grading tests with the task's own Python env, using the
+     repo's own test strategy (pytest, or Django's runtests.py),
      collecting every test's result by name.
   5. Verdict from the NAMED tests only. Write the result JSON.
 
-The scorer never imports the target repo - it drives git and pytest
-from outside, so tests run in a process the agent cannot touch.
+The scorer never imports the target repo - it drives git and the test
+runner from outside, so tests run in a process the agent cannot touch.
 
 Run from the project root, inside the project .venv:
   python3 src/scorer.py --task sympy__sympy-11400 --patch results/sympy-11400-claude.patch --agent claude
-  python3 src/scorer.py --task sympy__sympy-11400 --patch tasks/sympy-11400-gold_patch.diff --agent gold
-  python3 src/scorer.py --task sympy__sympy-11400 --patch NONE --agent none
+  python3 src/scorer.py --task django__django-10914 --patch tasks/django-10914-gold_patch.diff --agent gold
+  python3 src/scorer.py --task django__django-10914 --patch NONE --agent none
 """
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -31,20 +34,30 @@ from datasets import load_dataset
 ROOT = Path(__file__).resolve().parent.parent
 TEST_TIMEOUT_S = 5 * 60  # same test timeout as src/runner.py
 
-# What the dataset cannot tell us: where the repo is cloned here, and
-# which Python can run its tests. One entry per task - Task 2 adds a line.
+# What the dataset cannot tell us: where the repo is cloned here, which
+# Python can run its tests, and which test strategy the repo uses.
+# One entry per task.
 TASK_SETUP = {
     "sympy__sympy-11400": {
         "clone": "repos/sympy_src",
         "python": "envs/sympy-py39/bin/python",
+        "strategy": "pytest",
+    },
+    "django__django-10914": {
+        "clone": "repos/django_src",
+        "python": "envs/django-py38/bin/python",
+        "strategy": "django",
     },
 }
 
 CONFIG_NAMES = {"conftest.py", "pytest.ini", "tox.ini", "setup.cfg"}
 
+DJANGO_STATUS = {"ok": "PASSED", "FAIL": "FAILED",
+                 "ERROR": "ERROR", "skipped": "SKIPPED"}
 
-def run(cmd, cwd=None, timeout=None):
-    done = subprocess.run(cmd, cwd=cwd, timeout=timeout,
+
+def run(cmd, cwd=None, timeout=None, env=None):
+    done = subprocess.run(cmd, cwd=cwd, timeout=timeout, env=env,
                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                           text=True)
     return done.returncode, done.stdout
@@ -90,6 +103,47 @@ def short_name(test_name):
     return test_name.split("::")[-1]
 
 
+def django_label(test_file):
+    # tests/test_utils/tests.py -> test_utils.tests
+    parts = list(Path(test_file).parts)
+    if parts and parts[0] == "tests":
+        parts = parts[1:]
+    parts[-1] = Path(parts[-1]).stem
+    return ".".join(parts)
+
+
+def parse_django(out):
+    """Parse runtests.py --verbosity 2 output into {name: status}.
+
+    Most lines are 'test_name (module.Class) ... ok'. A test with a
+    docstring prints its name alone on one line and the docstring with
+    the result on the next, so a name-only line is carried forward to
+    the next result line. Keys match the dataset's FAIL_TO_PASS /
+    PASS_TO_PASS format exactly: 'test_name (module.Class)'. Because the
+    dataset lists some Django tests by docstring instead, a docstring-style
+    test is recorded under both its test-name key and its docstring key.
+    """
+    status = {}
+    pending = None
+    for line in out.splitlines():
+        m = re.match(r"^(\S+) \(([\w.]+)\) \.\.\. (ok|FAIL|ERROR|skipped)",
+                     line)
+        if m:
+            status[f"{m.group(1)} ({m.group(2)})"] = DJANGO_STATUS[m.group(3)]
+            pending = None
+            continue
+        m = re.match(r"^(\S+) \(([\w.]+)\)\s*$", line)
+        if m:
+            pending = f"{m.group(1)} ({m.group(2)})"
+            continue
+        m = re.match(r"^(.*?) \.\.\. (ok|FAIL|ERROR|skipped)", line)
+        if m and pending:
+            status[pending] = DJANGO_STATUS[m.group(2)]
+            status[m.group(1)] = DJANGO_STATUS[m.group(2)]
+            pending = None
+    return status
+
+
 def grade(task_id, patch_path, agent):
     info = load_task(task_id)
     setup = TASK_SETUP[task_id]
@@ -104,6 +158,7 @@ def grade(task_id, patch_path, agent):
         if not patch_file.is_absolute():
             patch_file = ROOT / patch_file
         patch_text = patch_file.read_text()
+
     if patch_file is not None and patch_text.strip() == "":
         patch_file = None  # an empty patch grades exactly like NONE
 
@@ -127,7 +182,8 @@ def grade(task_id, patch_path, agent):
     tmp_test = ROOT / "worktrees" / f".tmp-{short}-{agent}-test.diff"
 
     def remove_worktree():
-        run(["git", "-C", str(clone), "worktree", "remove", "--force", str(worktree)])
+        run(["git", "-C", str(clone), "worktree", "remove", "--force",
+             str(worktree)])
         run(["git", "-C", str(clone), "worktree", "prune"])
         # git leaves the folder behind if it was never (or no longer) a
         # registered worktree; clear it so the next worktree add works.
@@ -145,44 +201,60 @@ def grade(task_id, patch_path, agent):
 
         if patch_file is not None:
             tmp_agent.write_text(patch_text)
-            code, out = run(["git", "-C", str(worktree), "apply", str(tmp_agent)])
+            code, out = run(["git", "-C", str(worktree), "apply",
+                             str(tmp_agent)])
             if code != 0:
                 result["verdict"] = "error"
-                result["reason"] = "agent patch does not apply: " + out.strip()[-300:]
+                result["reason"] = ("agent patch does not apply: "
+                                     + out.strip()[-300:])
                 return result
 
         tmp_test.write_text(info["test_patch"])
         code, out = run(["git", "-C", str(worktree), "apply", str(tmp_test)])
         if code != 0:
             result["verdict"] = "error"
-            result["reason"] = "test patch does not apply: " + out.strip()[-300:]
+            result["reason"] = ("test patch does not apply: "
+                                 + out.strip()[-300:])
             return result
 
-        test_files = patch_files(info["test_patch"])
         start = time.time()
         try:
-            code, out = run([str(python), "-m", "pytest", *test_files,
-                             "-v", "--tb=no"], cwd=worktree,
-                            timeout=TEST_TIMEOUT_S)
+            if setup["strategy"] == "django":
+                labels = [django_label(f)
+                          for f in patch_files(info["test_patch"])]
+                env = dict(os.environ, PYTHONPATH=".")
+                code, out = run([str(python), "tests/runtests.py",
+                                 "--verbosity", "2", *labels],
+                                cwd=worktree, timeout=TEST_TIMEOUT_S,
+                                env=env)
+                status = parse_django(out)
+                key = lambda name: name
+            else:
+                test_files = patch_files(info["test_patch"])
+                code, out = run([str(python), "-m", "pytest", *test_files,
+                                 "-v", "--tb=no"], cwd=worktree,
+                                timeout=TEST_TIMEOUT_S)
+                status = {}
+                for nodeid, st in re.findall(
+                        r"^(\S+::\S+)\s+(PASSED|FAILED|ERROR)",
+                        out, flags=re.M):
+                    status[short_name(nodeid)] = st
+                key = short_name
         except subprocess.TimeoutExpired:
             result["verdict"] = "error"
             result["reason"] = "test run timed out"
             return result
         result["grading_time_s"] = round(time.time() - start, 1)
 
-        status = {}
-        for nodeid, st in re.findall(r"^(\S+::\S+)\s+(PASSED|FAILED|ERROR)",
-                                     out, flags=re.M):
-            status[short_name(nodeid)] = st
-
         def count(names):
             passed = sum(1 for n in names
-                         if status.get(short_name(n)) == "PASSED")
+                         if status.get(key(n)) == "PASSED")
             return {"passed": passed, "total": len(names)}
 
         result["fail_to_pass"] = count(info["fail_to_pass"])
         result["pass_to_pass_named"] = count(info["pass_to_pass"])
-        ok = (result["fail_to_pass"]["passed"] == result["fail_to_pass"]["total"]
+        ok = (result["fail_to_pass"]["passed"]
+              == result["fail_to_pass"]["total"]
               and result["pass_to_pass_named"]["passed"]
               == result["pass_to_pass_named"]["total"])
         result["verdict"] = "resolved" if ok else "not_resolved"

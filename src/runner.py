@@ -38,6 +38,12 @@ TASK_SETUP = {
         "clone": "repos/sympy_src",
         "python": "envs/sympy-py39/bin/python",
     },
+    "django__django-10914": {
+        "clone": "repos/django_src",
+        "python": "envs/django-py38/bin/python",
+        "test_hint": "Run the affected tests from the repo root with: "
+                     "PYTHONPATH=. {python} tests/runtests.py test_utils.tests",
+    },
 }
 
 PROMPT_TEMPLATE = """You are fixing a bug in this repository. Work only inside this directory: {worktree}
@@ -49,7 +55,7 @@ Rules:
 - Do not edit any test files, and do not create files whose names start with test_.
 - Do not modify anything outside this directory.
 - Make the smallest fix that resolves the issue.
-- You may run tests with this Python: {python}
+- {test_hint}
 - When you are done, stop. Your changes will be captured as a patch and graded on a clean checkout with tests you cannot see.
 """
 
@@ -110,8 +116,11 @@ def main():
         print("worktree add failed:", out.strip()[-300:])
         sys.exit(1)
 
+    raw_hint = setup.get("test_hint")
+    test_hint = (raw_hint.format(python=python) if raw_hint
+                 else f"You may run tests with this Python: {python}")
     prompt = PROMPT_TEMPLATE.format(worktree=worktree, issue=info["issue"],
-                                    python=python)
+                                    test_hint=test_hint)
     cmd = build_command(args.cli, prompt)
 
     start = time.time()

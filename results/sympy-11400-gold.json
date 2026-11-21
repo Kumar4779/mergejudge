@@ -8,7 +8,7 @@
   "diff_lines_removed": 0,
   "test_file_touched": false,
   "verdict": "resolved",
-  "grading_time_s": 8.9,
+  "grading_time_s": 1.9,
   "fail_to_pass": {
     "passed": 2,
     "total": 2
