@@ -133,6 +133,17 @@ def main():
     log_path = ROOT / "results" / f"{short}-{args.agent}.log"
     log_path.write_text(log)
 
+    cost_usd = None
+    for line in log.splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        if event.get("type") == "result" and "total_cost_usd" in event:
+            cost_usd = event["total_cost_usd"]
+
     run(["git", "-C", str(worktree), "add", "-A"])
     code, patch_text = run(["git", "-C", str(worktree), "diff", "--cached"])
     patch_path = ROOT / "results" / f"{short}-{args.agent}.patch"
@@ -154,6 +165,8 @@ def main():
         record = json.loads(result_path.read_text())
         record["agent_time_s"] = agent_time_s
         record["agent_status"] = status
+        if cost_usd is not None:
+            record["cost_usd"] = cost_usd
         result_path.write_text(json.dumps(record, indent=2) + "\n")
 
 
