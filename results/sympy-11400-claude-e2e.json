@@ -1,0 +1,22 @@
+{
+  "task": "sympy__sympy-11400",
+  "agent": "claude-e2e",
+  "files_touched": [
+    "sympy/printing/ccode.py"
+  ],
+  "diff_lines_added": 14,
+  "diff_lines_removed": 0,
+  "test_file_touched": false,
+  "grading_time_s": 14.1,
+  "fail_to_pass": {
+    "passed": 2,
+    "total": 2
+  },
+  "pass_to_pass_named": {
+    "passed": 29,
+    "total": 29
+  },
+  "verdict": "resolved",
+  "agent_time_s": 24.4,
+  "agent_status": "completed"
+}

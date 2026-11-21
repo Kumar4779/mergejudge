@@ -104,6 +104,8 @@ def grade(task_id, patch_path, agent):
         if not patch_file.is_absolute():
             patch_file = ROOT / patch_file
         patch_text = patch_file.read_text()
+    if patch_file is not None and patch_text.strip() == "":
+        patch_file = None  # an empty patch grades exactly like NONE
 
     files, added, removed = patch_stats(patch_text)
     result = {

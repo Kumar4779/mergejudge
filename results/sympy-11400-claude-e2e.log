@@ -1,0 +1,16 @@
+I fixed this in `sympy/printing/ccode.py`. `ccode(sinc(x))` now gives the piecewise form you suggested:
+
+```
+((x != 0) ? (
+   sin(x)/x
+)
+: (
+   1
+))
+```
+
+I added two methods to `CCodePrinter`:
+- **`_print_sinc`** rewrites `sinc(x)` as `Piecewise((sin(x)/x, Ne(x, 0)), (1, True))` and prints that.
+- **`_print_Relational`** prints conditions as C operators (`x != 0`, `x == 1`, `x < 3`). Before, `Ne(theta, 0)` came out as `Ne(theta, 0)`, which isn't valid C, so the output in your issue wouldn't have compiled either. This affects every relational, not just ones from `sinc`.
+
+I checked both by hand: `sinc(x)`, and a piecewise using `Eq(x, 1)` and `x < 3`. The existing tests in `sympy/printing/tests/test_ccode.py` and `sympy/utilities/tests/test_codegen.py` all pass (81 tests). I didn't add new tests because the rules say not to edit test files.
