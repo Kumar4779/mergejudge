@@ -1,0 +1,27 @@
+{
+  "task": "django__django-10914",
+  "agent": "claude-e2e-r3",
+  "files_touched": [
+    "django/conf/global_settings.py",
+    "docs/ref/settings.txt",
+    "docs/releases/3.0.txt"
+  ],
+  "diff_lines_added": 12,
+  "diff_lines_removed": 4,
+  "test_file_touched": false,
+  "grading_time_s": 0.7,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 98,
+    "total": 98
+  },
+  "verdict": "resolved",
+  "agent_time_s": 37.3,
+  "agent_status": "completed",
+  "cost_usd": 0.2051488,
+  "agent_config": "claude-code (default model, Opus)",
+  "repeat": 3
+}

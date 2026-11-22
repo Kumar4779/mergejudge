@@ -1,0 +1,25 @@
+{
+  "task": "sympy__sympy-11400",
+  "agent": "claude-e2e-r1",
+  "files_touched": [
+    "sympy/printing/ccode.py"
+  ],
+  "diff_lines_added": 14,
+  "diff_lines_removed": 0,
+  "test_file_touched": false,
+  "grading_time_s": 1.0,
+  "fail_to_pass": {
+    "passed": 2,
+    "total": 2
+  },
+  "pass_to_pass_named": {
+    "passed": 29,
+    "total": 29
+  },
+  "verdict": "resolved",
+  "agent_time_s": 27.9,
+  "agent_status": "completed",
+  "cost_usd": 0.19988759999999997,
+  "agent_config": "claude-code (default model, Opus)",
+  "repeat": 1
+}
