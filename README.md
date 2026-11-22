@@ -25,6 +25,38 @@ Coding agents will happily tell you "all tests pass" in an environment where the
 
 Every row is a JSON record in `results/`, with the agent's patch and trace log beside it. Gold is the dataset's human fix; none is the no-patch baseline control.
 
+## Best-of-N: the first judged comparison
+
+MergeJudge exists to judge *between* agents, so the second arm matters more than the second task. Two Claude configurations now run every task — the default model (Opus) and Sonnet — with identical prompts and rules. `src/compare.py` ranks them per task: resolved first, then smaller diff, then lower cost. Gold and none are reference controls, never competitors.
+
+### django__django-10914
+
+| Run | Verdict | FAIL_TO_PASS | PASS_TO_PASS | Diff | Time | Cost |
+|---|---|---|---|---|---|---|
+| Claude Sonnet | resolved | 1/1 | 98/98 | +1 / −1 | 7.3s | $0.0762 |
+| Claude (default model) | resolved | 1/1 | 98/98 | +12 / −12 | 35.7s | $0.2247 |
+
+**Winner: Sonnet** — both resolved; Sonnet's patch is line-for-line the human gold fix, at a third of the cost and without the three docs files the default model's patch also edited.
+
+### sympy__sympy-11400
+
+| Run | Verdict | FAIL_TO_PASS | PASS_TO_PASS | Diff | Time | Cost |
+|---|---|---|---|---|---|---|
+| Claude (default model) | resolved | 2/2 | 29/29 | +14 / −0 | 26.4s | $0.2156 |
+| Claude Sonnet | not_resolved | 0/2 | 29/29 | +8 / −0 | 8.8s | $0.0837 |
+
+**Winner: the default model** — the only arm that resolved. Sonnet's patch added a sinc rewrite but no Relational support, and both target tests still failed.
+
+### Portfolio view
+
+| Strategy | Tasks resolved | Total cost |
+|---|---|---|
+| Always default model | 2/2 | $0.4403 |
+| Always Sonnet | 1/2 | $0.1599 |
+| Oracle (per-task winner) | 2/2 | $0.2918 |
+
+There is no best arm — the winner depends on the task. Picking the winner per task matches the strongest single arm's quality (2/2) for about two-thirds of its cost, while the cheapest arm alone is cheap precisely because it fails half the time. That gap between "always one agent" and "the right agent per task" is what AgentRouter is being built to capture — and every row above is its future training data. (Canonical run per family shown; the default model has resolved sympy in 3 of 3 runs so far — manual, e2e, and the audited e2e2.)
+
 ## What the results actually say
 
 - **Test-pass is not mergeable.** On django-10914 the agent resolved the task (+12 / −12) but also edited three documentation files the one-line gold fix never touched. The tests can't see that; a reviewer would. MergeJudge records diff size on every run so the difference is visible instead of vibes.
@@ -52,6 +84,6 @@ python3 src/runner.py --task django__django-10914 --agent claude-e2e
 ## Roadmap
 
 - Remaining pinned tasks: astropy-12907, matplotlib-18869, scikit-learn-10297 — same recipe: extract, hand-validate both directions, then automated runs.
-- A second agent arm, so patches compete best-of-N instead of passing alone.
+- A second *vendor* arm (Codex or Cursor CLI), so the competition crosses providers, not just models.
 - OS-level sandboxing, then dataset scale-up from 5 to ~30 tasks.
 - AgentRouter: a router trained on MergeJudge's verified outcomes — Bradley–Terry arm rankings plus a P(resolved) model with calibrated abstention and a cost–quality Pareto frontier. The dataset this repo produces is its training set.
