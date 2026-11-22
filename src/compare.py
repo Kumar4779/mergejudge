@@ -1,15 +1,19 @@
 """MergeJudge compare view - rank agent arms per task from graded results.
 
 Reads every results/*.json the scorer and runner wrote. For each task:
-  1. Group runs into families (Claude Sonnet, Claude (default model), ...).
+  1. Group runs into families: model family + scaffold, e.g.
+     "Claude Sonnet · plan-first"; a record without a scaffold is direct.
      gold and none are controls: shown for reference, never ranked.
+     Adversarial probe runs (probe_prompt: true) are not data and are
+     skipped entirely.
   2. Pick one canonical run per (task, family): prefer a run with cost_usd
      recorded, otherwise the first by agent name.
   3. Rank canonical runs: resolved first, then fewest diff lines
      (added + removed), then lowest cost (missing cost sorts last).
 Then a portfolio summary per family, plus an Oracle line that takes each
 task's winner, and a reliability table: every run (repeats included) per
-(task, family), with pass^k = C(resolved, k) / C(runs, k).
+(task, family), with pass^k = C(resolved, k) / C(runs, k), and a 2x2
+factorial grid per task (scaffold x model family) over every run.
 
 Run from the project root:
   python3 src/compare.py
@@ -33,7 +37,7 @@ def agent_name(record):
     return record.get("agent_key") or record["agent"]
 
 
-def family(record):
+def model_family(record):
     config = record.get("agent_config")
     if config:
         lowered = config.lower()
@@ -44,6 +48,14 @@ def family(record):
         return config
     name = agent_name(record)
     return LEGACY_FAMILY.get(name, name)
+
+
+def scaffold(record):
+    return record.get("scaffold", "direct")
+
+
+def family(record):
+    return f"{model_family(record)} · {scaffold(record)}"
 
 
 def diff_total(record):
@@ -101,6 +113,7 @@ def canonical(runs):
 def main():
     records = [json.loads(p.read_text())
                for p in sorted((ROOT / "results").glob("*.json"))]
+    records = [r for r in records if not r.get("probe_prompt")]
     tasks = sorted({r["task"] for r in records})
 
     winners = {}
@@ -144,6 +157,7 @@ def main():
           f"| {total_cost(winners.values())} |")
 
     reliability(records, tasks)
+    factorial(records, tasks)
 
 
 def pass_hat_k(runs, resolved, k):
@@ -170,6 +184,39 @@ def reliability(records, tasks):
         estimates = [f"{pass_hat_k(n, c, k):.3f}" if k <= n else "—"
                      for k in ks]
         print(f"| {task} | {fam} | {n} | {c} | " + " | ".join(estimates) + " |")
+
+
+FACTORIAL_ROWS = ("direct", "plan-first")
+FACTORIAL_COLS = ("Claude (default model)", "Claude Sonnet")
+
+
+def factorial(records, tasks):
+    print("\n## Factorial (scaffold x model, all runs)")
+    for task in tasks:
+        print(f"\n### {task}\n")
+        print("| Scaffold | " + " | ".join(FACTORIAL_COLS) + " |")
+        print("|---|" + "---|" * len(FACTORIAL_COLS))
+        for scaf in FACTORIAL_ROWS:
+            cells = []
+            for fam in FACTORIAL_COLS:
+                runs = [r for r in records if r["task"] == task
+                        and agent_name(r) not in CONTROLS
+                        and scaffold(r) == scaf and model_family(r) == fam]
+                cells.append(factorial_cell(runs))
+            print(f"| {scaf} | " + " | ".join(cells) + " |")
+
+
+def factorial_cell(runs):
+    if not runs:
+        return "—"
+    resolved = sum(r["verdict"] == "resolved" for r in runs)
+    costs = [r["cost_usd"] for r in runs if r.get("cost_usd") is not None]
+    if not costs:
+        return f"{resolved}/{len(runs)} resolved, no cost recorded"
+    note = (f" ({len(costs)} of {len(runs)} runs costed)"
+            if len(costs) < len(runs) else "")
+    return (f"{resolved}/{len(runs)} resolved, "
+            f"mean {fmt_cost(sum(costs) / len(costs))}{note}")
 
 
 def total_cost(runs):
