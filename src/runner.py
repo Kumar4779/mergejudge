@@ -8,8 +8,9 @@ The other half of the scorer. For one task and one agent arm:
      exists is captured and graded - the scorer is the judge.
   4. Capture the patch (git add -A + diff --cached, so new files count),
      save the agent's full output as a log, remove the worktree.
-  5. Grade the patch with src/scorer.py and stamp agent_time_s and
-     agent_status into the result JSON the scorer writes.
+  5. Grade the patch with src/scorer.py and stamp agent_time_s,
+     agent_status, cost_usd and agent_config into the result JSON the
+     scorer writes.
 
 Run from the project root, inside the project .venv:
   python3 src/runner.py --task sympy__sympy-11400 --agent claude-e2e
@@ -46,6 +47,16 @@ TASK_SETUP = {
     },
 }
 
+# Per-arm configuration, keyed by --agent. Arms differ only in extra CLI
+# args; the prompt is identical for every arm. An arm not listed here
+# (e.g. claude-e2e2) runs with no extra args and gets no agent_config.
+ARM_CONFIG = {
+    "claude-e2e": {"args": [], "label": "claude-code (default model, Opus)"},
+    "claude-sonnet": {"args": ["--model", "sonnet"],
+                      "label": "claude-code (Sonnet)"},
+}
+DEFAULT_ARM = {"args": [], "label": None}
+
 PROMPT_TEMPLATE = """You are fixing a bug in this repository. Work only inside this directory: {worktree}
 
 Issue:
@@ -76,10 +87,10 @@ def load_task(task_id):
     }
 
 
-def build_command(cli, prompt):
+def build_command(cli, prompt, extra_args):
     if cli == "claude":
         return ["claude", "-p", prompt, "--dangerously-skip-permissions",
-                "--output-format", "stream-json", "--verbose"]
+                "--output-format", "stream-json", "--verbose", *extra_args]
     raise SystemExit(f"unknown --cli: {cli} (v1 supports: claude)")
 
 
@@ -121,7 +132,8 @@ def main():
                  else f"You may run tests with this Python: {python}")
     prompt = PROMPT_TEMPLATE.format(worktree=worktree, issue=info["issue"],
                                     test_hint=test_hint)
-    cmd = build_command(args.cli, prompt)
+    arm = ARM_CONFIG.get(args.agent, DEFAULT_ARM)
+    cmd = build_command(args.cli, prompt, arm["args"])
 
     start = time.time()
     status = "completed"
@@ -176,6 +188,8 @@ def main():
         record["agent_status"] = status
         if cost_usd is not None:
             record["cost_usd"] = cost_usd
+        if arm["label"] is not None:
+            record["agent_config"] = arm["label"]
         result_path.write_text(json.dumps(record, indent=2) + "\n")
 
 
