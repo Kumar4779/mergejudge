@@ -19,6 +19,7 @@ Run from the project root, inside the project .venv:
 import argparse
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
@@ -50,12 +51,23 @@ TASK_SETUP = {
 # Per-arm configuration, keyed by --agent. Arms differ only in extra CLI
 # args; the prompt is identical for every arm. An arm not listed here
 # (e.g. claude-e2e2) runs with no extra args and gets no agent_config.
+# A -rN suffix marks a reliability repeat of the base arm
+# (claude-sonnet-r2 runs as claude-sonnet and is stamped repeat: 2).
 ARM_CONFIG = {
     "claude-e2e": {"args": [], "label": "claude-code (default model, Opus)"},
     "claude-sonnet": {"args": ["--model", "sonnet"],
                       "label": "claude-code (Sonnet)"},
 }
 DEFAULT_ARM = {"args": [], "label": None}
+REPEAT_SUFFIX = re.compile(r"^(.+)-r(\d+)$")
+
+
+def lookup_arm(agent):
+    """Return (arm config, repeat number or None) for an --agent name."""
+    match = REPEAT_SUFFIX.match(agent)
+    if match:
+        return ARM_CONFIG.get(match[1], DEFAULT_ARM), int(match[2])
+    return ARM_CONFIG.get(agent, DEFAULT_ARM), None
 
 PROMPT_TEMPLATE = """You are fixing a bug in this repository. Work only inside this directory: {worktree}
 
@@ -132,7 +144,7 @@ def main():
                  else f"You may run tests with this Python: {python}")
     prompt = PROMPT_TEMPLATE.format(worktree=worktree, issue=info["issue"],
                                     test_hint=test_hint)
-    arm = ARM_CONFIG.get(args.agent, DEFAULT_ARM)
+    arm, repeat = lookup_arm(args.agent)
     cmd = build_command(args.cli, prompt, arm["args"])
 
     start = time.time()
@@ -190,6 +202,8 @@ def main():
             record["cost_usd"] = cost_usd
         if arm["label"] is not None:
             record["agent_config"] = arm["label"]
+        if repeat is not None:
+            record["repeat"] = repeat
         result_path.write_text(json.dumps(record, indent=2) + "\n")
 
 
