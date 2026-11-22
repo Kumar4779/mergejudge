@@ -18,10 +18,12 @@ Coding agents will happily tell you "all tests pass" in an environment where the
 | sympy__sympy-11400 | gold (human fix) | resolved | 2/2 | 29/29 | +14 / −0 | — | — |
 | sympy__sympy-11400 | claude (manual) | resolved | 2/2 | 29/29 | +14 / −0 | ~41s | — |
 | sympy__sympy-11400 | claude-e2e (runner) | resolved | 2/2 | 29/29 | +14 / −0 | 24.4s | — |
-| sympy__sympy-11400 | claude-e2e2 (audited) | resolved | 2/2 | 29/29 | +14 / −0 | 26.4s | $0.22 |
+| sympy__sympy-11400 | claude-e2e2 (audited) | resolved | 2/2 | 29/29 | +14 / −0 | 26.4s | $0.2156 |
+| sympy__sympy-11400 | claude-sonnet (runner) | not_resolved | 0/2 | 29/29 | +8 / −0 | 8.8s | $0.0837 |
 | django__django-10914 | none (baseline) | not_resolved | 0/1 | 98/98 | — | — | — |
 | django__django-10914 | gold (human fix) | resolved | 1/1 | 98/98 | +1 / −1 | — | — |
-| django__django-10914 | claude-e2e (runner) | resolved | 1/1 | 98/98 | +12 / −12 | 35.7s | $0.22 |
+| django__django-10914 | claude-e2e (runner) | resolved | 1/1 | 98/98 | +12 / −12 | 35.7s | $0.2247 |
+| django__django-10914 | claude-sonnet (runner) | resolved | 1/1 | 98/98 | +1 / −1 | 7.3s | $0.0762 |
 
 Every row is a JSON record in `results/`, with the agent's patch and trace log beside it. Gold is the dataset's human fix; none is the no-patch baseline control.
 
@@ -56,6 +58,8 @@ MergeJudge exists to judge *between* agents, so the second arm matters more than
 | Oracle (per-task winner) | 2/2 | $0.2918 |
 
 There is no best arm — the winner depends on the task. Picking the winner per task matches the strongest single arm's quality (2/2) for about two-thirds of its cost, while the cheapest arm alone is cheap precisely because it fails half the time. That gap between "always one agent" and "the right agent per task" is what AgentRouter is being built to capture — and every row above is its future training data. (Canonical run per family shown; the default model has resolved sympy in 3 of 3 runs so far — manual, e2e, and the audited e2e2.)
+
+The oracle figure counts only the winning runs — it is the lower bound a router aims at; running every arm on both tasks cost $0.6002 in total.
 
 ## What the results actually say
 
