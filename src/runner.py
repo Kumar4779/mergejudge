@@ -57,17 +57,33 @@ TASK_SETUP = {
     },
 }
 
-# Per-arm configuration, keyed by --agent. Arms differ only in extra CLI
-# args; the prompt is identical for every arm. An arm not listed here
-# (e.g. claude-e2e2) runs with no extra args and gets no agent_config.
-# A -rN suffix marks a reliability repeat of the base arm
+# Per-arm configuration, keyed by --agent. Arms differ in extra CLI args
+# (the model) and scaffold. "direct" is the base prompt unchanged;
+# "plan-first" appends PLAN_FIRST_INSTRUCTION to it. An arm not listed
+# here (e.g. claude-e2e2) runs direct with no extra args and gets no
+# agent_config. A -rN suffix marks a reliability repeat of the base arm
 # (claude-sonnet-r2 runs as claude-sonnet and is stamped repeat: 2).
+DEFAULT_LABEL = "claude-code (default model, Opus)"
+SONNET_LABEL = "claude-code (Sonnet)"
 ARM_CONFIG = {
-    "claude-e2e": {"args": [], "label": "claude-code (default model, Opus)"},
-    "claude-sonnet": {"args": ["--model", "sonnet"],
-                      "label": "claude-code (Sonnet)"},
+    "claude-e2e": {"args": [], "label": DEFAULT_LABEL, "scaffold": "direct"},
+    "claude-sonnet": {"args": ["--model", "sonnet"], "label": SONNET_LABEL,
+                      "scaffold": "direct"},
+    "claude-planfirst": {"args": [], "label": DEFAULT_LABEL,
+                         "scaffold": "plan-first"},
+    "claude-sonnet-planfirst": {"args": ["--model", "sonnet"],
+                                "label": SONNET_LABEL,
+                                "scaffold": "plan-first"},
 }
-DEFAULT_ARM = {"args": [], "label": None}
+DEFAULT_ARM = {"args": [], "label": None, "scaffold": "direct"}
+
+PLAN_FIRST_INSTRUCTION = (
+    "Work in this order: (1) write a small reproduction script that "
+    "demonstrates the bug and run it; (2) state your plan in a few lines "
+    "— root cause and which files you will change; (3) make the smallest "
+    "fix; (4) run the affected tests on your fix using the test command "
+    "given above, and keep iterating until they pass. Do not finish until "
+    "step 4 passes.\n")
 REPEAT_SUFFIX = re.compile(r"^(.+)-r(\d+)$")
 
 
@@ -208,9 +224,11 @@ def main():
                  else f"You may run tests with this Python: {python}")
     prompt = PROMPT_TEMPLATE.format(worktree=worktree, issue=info["issue"],
                                     test_hint=test_hint)
+    arm, repeat = lookup_arm(args.agent)
+    if arm["scaffold"] == "plan-first":
+        prompt += PLAN_FIRST_INSTRUCTION
     if args.probe_prompt:
         prompt += PROBE_INSTRUCTION
-    arm, repeat = lookup_arm(args.agent)
     cmd = build_command(args.cli, prompt, arm["args"])
 
     env = None
@@ -292,6 +310,7 @@ def main():
             record["agent_config"] = arm["label"]
         if repeat is not None:
             record["repeat"] = repeat
+        record["scaffold"] = arm["scaffold"]
         record["sandbox"] = args.sandbox
         record["model"] = model
         if args.probe_prompt:
