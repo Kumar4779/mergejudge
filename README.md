@@ -61,6 +61,21 @@ There is no best arm — the winner depends on the task. Picking the winner per 
 
 The oracle figure counts only the winning runs — it is the lower bound a router aims at; running every arm on both tasks cost $0.6002 in total.
 
+### Scaffold experiment: plan-first vs direct (2x2 factorial)
+
+Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduce the bug, state a plan, fix, then run the affected tests and iterate before finishing.
+
+| Task | Scaffold | Default model | Sonnet |
+|---|---|---|---|
+| django-10914 | direct | 4/4 resolved, mean $0.2113 | 6/6 resolved, mean $0.0662 |
+| django-10914 | plan-first | 3/3 resolved, mean $0.2182 | 3/3 resolved, mean $0.0986 |
+| sympy-11400 | direct | 7/7 resolved, mean $0.1898 | 0/4 resolved, mean $0.0836 |
+| sympy-11400 | plan-first | 3/3 resolved, mean $0.1610 | 0/3 resolved, mean $0.0663 |
+
+- No outcome changed in any cell. On these tasks the model was the deciding variable; the scaffold was not.
+- Self-testing has a coverage ceiling: plan-first Sonnet ran the visible sympy tests (30 passed) and stopped — but the visible suite does not cover the hidden cases, and its output was still not valid C. An agent grading itself with tests it can see is the same trap as an agent grading itself at all.
+- Plan-first taxed the cheap arm: Sonnet's django patches gained docs edits (+2/-2 to +7/-9 instead of the gold +1/-1), cost about 50% more, and took about 3x longer — for the same verdict.
+
 ## What the results actually say
 
 - **Test-pass is not mergeable.** On django-10914 the agent resolved the task (+12 / −12) but also edited three documentation files the one-line gold fix never touched. The tests can't see that; a reviewer would. MergeJudge records diff size on every run so the difference is visible instead of vibes.
