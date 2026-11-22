@@ -11,10 +11,15 @@
 (deny network*)
 (allow network-outbound (remote ip "localhost:{PROXY_PORT}"))
 
-;; The answers live here: task patches, gold patches, earlier results.
-(deny file-read* file-write*
-    (subpath "{PROJECT}/tasks")
-    (subpath "{PROJECT}/results"))
+;; Nothing in the project is readable: task and gold patches, results,
+;; the README's write-ups, the task clones' history. The one exception is
+;; envs/, the task Pythons the agent runs tests with. Later rules win, so
+;; the envs allow must stay after the project deny.
+(deny file-read* (subpath "{PROJECT}"))
+(allow file-read* (subpath "{PROJECT}/envs"))
+;; realpath() of the env Python stats each ancestor directory; allow stat
+;; (not listing, not reading) of the project root itself.
+(allow file-read-metadata (literal "{PROJECT}"))
 
 ;; Writes only to the worktree, temp, and Claude's own state.
 (deny file-write*
