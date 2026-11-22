@@ -10,6 +10,7 @@ Reads every results/*.json the scorer and runner wrote. For each task:
      recorded, otherwise the first by agent name.
   3. Rank canonical runs: resolved first, then fewest diff lines
      (added + removed), then lowest cost (missing cost sorts last).
+     Only direct-scaffold families are ranked here and in the Portfolio.
 Then a portfolio summary per family, plus an Oracle line that takes each
 task's winner, and a reliability table: every run (repeats included) per
 (task, family), with pass^k = C(resolved, k) / C(runs, k), and a 2x2
@@ -123,7 +124,9 @@ def main():
         controls = [r for r in runs if agent_name(r) in CONTROLS]
         by_family = {}
         for r in runs:
-            if agent_name(r) not in CONTROLS:
+            # Headline tables and Portfolio rank direct arms only; other
+            # scaffolds appear in the Reliability and Factorial sections.
+            if agent_name(r) not in CONTROLS and scaffold(r) == "direct":
                 by_family.setdefault(family(r), []).append(r)
         ranked = sorted((canonical(rs) for rs in by_family.values()),
                         key=rank_key)
