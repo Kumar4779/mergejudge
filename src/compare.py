@@ -8,13 +8,15 @@ Reads every results/*.json the scorer and runner wrote. For each task:
   3. Rank canonical runs: resolved first, then fewest diff lines
      (added + removed), then lowest cost (missing cost sorts last).
 Then a portfolio summary per family, plus an Oracle line that takes each
-task's winner.
+task's winner, and a reliability table: every run (repeats included) per
+(task, family), with pass^k = C(resolved, k) / C(runs, k).
 
 Run from the project root:
   python3 src/compare.py
 """
 
 import json
+from math import comb
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -90,6 +92,8 @@ def why_won(winner, runner_up):
 
 
 def canonical(runs):
+    # Reliability repeats (-rN) never displace an existing canonical run.
+    runs = [r for r in runs if r.get("repeat") is None] or runs
     with_cost = [r for r in runs if r.get("cost_usd") is not None]
     return sorted(with_cost or runs, key=agent_name)[0]
 
@@ -138,6 +142,34 @@ def main():
     resolved = sum(r["verdict"] == "resolved" for r in winners.values())
     print(f"| Oracle (per-task winner) | {resolved}/{n} "
           f"| {total_cost(winners.values())} |")
+
+    reliability(records, tasks)
+
+
+def pass_hat_k(runs, resolved, k):
+    """Unbiased pass^k: chance k runs drawn without replacement all resolve."""
+    return comb(resolved, k) / comb(runs, k)
+
+
+def reliability(records, tasks):
+    cells = {}  # (task, family) -> [resolved?, ...] over every run
+    for r in records:
+        if agent_name(r) not in CONTROLS:
+            cells.setdefault((r["task"], family(r)), []).append(
+                r["verdict"] == "resolved")
+    max_runs = max(len(v) for v in cells.values())
+    ks = range(1, max_runs + 1)
+
+    print("\n## Reliability (all runs, pass^k)\n")
+    print("| Task | Family | Runs | Resolved | "
+          + " | ".join(f"pass^{k}" for k in ks) + " |")
+    print("|---|---|---|---|" + "---|" * len(ks))
+    for task, fam in sorted(cells):
+        outcomes = cells[(task, fam)]
+        n, c = len(outcomes), sum(outcomes)
+        estimates = [f"{pass_hat_k(n, c, k):.3f}" if k <= n else "—"
+                     for k in ks]
+        print(f"| {task} | {fam} | {n} | {c} | " + " | ".join(estimates) + " |")
 
 
 def total_cost(runs):
