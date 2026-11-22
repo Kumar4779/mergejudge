@@ -1,0 +1,27 @@
+;; MergeJudge agent sandbox (sandbox-exec / SBPL). The runner fills the
+;; placeholders per run with real (symlink-resolved) paths:
+;;   {WORKTREE} the agent's temp worktree   {PROJECT} the MergeJudge root
+;;   {TMPDIR}   the system temp dir         {HOME}    the user's home
+;;   {PROXY_PORT} the runner's egress proxy (src/egress_proxy.py)
+(version 1)
+(allow default)
+
+;; No network, except the local egress proxy, which forwards only to the
+;; model API.
+(deny network*)
+(allow network-outbound (remote ip "localhost:{PROXY_PORT}"))
+
+;; The answers live here: task patches, gold patches, earlier results.
+(deny file-read* file-write*
+    (subpath "{PROJECT}/tasks")
+    (subpath "{PROJECT}/results"))
+
+;; Writes only to the worktree, temp, and Claude's own state.
+(deny file-write*
+    (require-not
+        (require-any
+            (subpath "{WORKTREE}")
+            (subpath "{TMPDIR}")
+            (subpath "/private/tmp")
+            (subpath "{HOME}/.claude")
+            (subpath "/dev"))))

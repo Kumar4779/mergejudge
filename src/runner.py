@@ -5,12 +5,16 @@ The other half of the scorer. For one task and one agent arm:
   2. Run the agent headless inside it, with only the issue text and the
      rules - it never sees the test patch or the gold patch.
   3. Hard timeout (sandbox contract). Even on timeout, whatever patch
-     exists is captured and graded - the scorer is the judge.
+     exists is captured and graded - the scorer is the judge. By default
+     the agent runs under sandbox-exec (sandbox/agent.sb.template): no
+     reads of tasks/ or results/, writes only to its worktree and temp,
+     and network only through src/egress_proxy.py to the model API.
+     --no-sandbox turns the gate off.
   4. Capture the patch (git add -A + diff --cached, so new files count),
      save the agent's full output as a log, remove the worktree.
   5. Grade the patch with src/scorer.py and stamp agent_time_s,
-     agent_status, cost_usd and agent_config into the result JSON the
-     scorer writes.
+     agent_status, cost_usd, agent_config, sandbox, model (from the
+     trace) and egress_refused into the result JSON the scorer writes.
 
 Run from the project root, inside the project .venv:
   python3 src/runner.py --task sympy__sympy-11400 --agent claude-e2e
@@ -29,6 +33,8 @@ import time
 from pathlib import Path
 
 from datasets import load_dataset
+
+import egress_proxy
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENT_TIMEOUT_S = 30 * 60  # hard kill for the agent run (sandbox contract)
@@ -99,6 +105,26 @@ def load_task(task_id):
     }
 
 
+def sandbox_profile(worktree, proxy_port):
+    """Fill sandbox/agent.sb.template with this run's real paths.
+
+    sandbox-exec matches resolved paths (/var -> /private/var), so every
+    path is passed through realpath.
+    """
+    real = os.path.realpath
+    values = {
+        "WORKTREE": real(worktree),
+        "PROJECT": real(ROOT),
+        "TMPDIR": real(tempfile.gettempdir()),
+        "HOME": real(Path.home()),
+        "PROXY_PORT": str(proxy_port),
+    }
+    profile = (ROOT / "sandbox" / "agent.sb.template").read_text()
+    for key, value in values.items():
+        profile = profile.replace("{" + key + "}", value)
+    return profile
+
+
 def build_command(cli, prompt, extra_args):
     if cli == "claude":
         return ["claude", "-p", prompt, "--dangerously-skip-permissions",
@@ -114,6 +140,8 @@ def main():
     ap.add_argument("--cli", default="claude")
     ap.add_argument("--keep", action="store_true",
                     help="keep the agent worktree afterwards (debugging)")
+    ap.add_argument("--no-sandbox", dest="sandbox", action="store_false",
+                    help="run the agent without the sandbox-exec gate")
     args = ap.parse_args()
 
     info = load_task(args.task)
@@ -147,9 +175,23 @@ def main():
     arm, repeat = lookup_arm(args.agent)
     cmd = build_command(args.cli, prompt, arm["args"])
 
+    env = None
+    proxy = None
+    profile_path = worktree.parent / f"mergejudge-{short}-{args.agent}.sb"
+    if args.sandbox:
+        proxy = egress_proxy.start()
+        port = proxy.server_address[1]
+        profile_path.write_text(sandbox_profile(worktree, port))
+        cmd = ["sandbox-exec", "-f", str(profile_path), *cmd]
+        env = dict(os.environ,
+                   HTTPS_PROXY=f"http://127.0.0.1:{port}",
+                   HTTP_PROXY=f"http://127.0.0.1:{port}",
+                   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1")
+
     start = time.time()
     status = "completed"
-    proc = subprocess.Popen(cmd, cwd=worktree, stdout=subprocess.PIPE,
+    proc = subprocess.Popen(cmd, cwd=worktree, env=env,
+                            stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, text=True,
                             start_new_session=True)
     try:
@@ -162,11 +204,17 @@ def main():
         log, _ = proc.communicate()
     log = log or ""
     agent_time_s = round(time.time() - start, 1)
+    egress_refused = []
+    if proxy is not None:
+        proxy.shutdown()
+        egress_refused = sorted(set(proxy.refused))
+        profile_path.unlink(missing_ok=True)
 
     log_path = ROOT / "results" / f"{short}-{args.agent}.log"
     log_path.write_text(log)
 
     cost_usd = None
+    model = None
     for line in log.splitlines():
         try:
             event = json.loads(line)
@@ -174,6 +222,8 @@ def main():
             continue
         if not isinstance(event, dict):
             continue
+        if event.get("type") == "system" and event.get("subtype") == "init":
+            model = event.get("model")
         if event.get("type") == "result" and "total_cost_usd" in event:
             cost_usd = event["total_cost_usd"]
 
@@ -204,6 +254,10 @@ def main():
             record["agent_config"] = arm["label"]
         if repeat is not None:
             record["repeat"] = repeat
+        record["sandbox"] = args.sandbox
+        record["model"] = model
+        if args.sandbox:
+            record["egress_refused"] = egress_refused
         result_path.write_text(json.dumps(record, indent=2) + "\n")
 
 
