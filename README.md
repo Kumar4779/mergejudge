@@ -221,9 +221,9 @@ Ranking uses every run, reliability first: on matplotlib a single canonical run 
 
 | Family | Tasks won | Overall pass^1 | Expected spend |
 |---|---|---|---|
-| Claude (default model) · direct | 9/20 | 0.867 (72/83) | $4.2846 |
-| Claude Sonnet · direct | 10/20 | 0.646 (53/82) | $1.8281 |
-| Oracle (per-task winner) | 19/20 | 0.914 (74/81) | $3.0750 |
+| Claude (default model) · direct | 9/20 | 0.867 [0.778, 0.924] (72/83) | $4.2846 |
+| Claude Sonnet · direct | 10/20 | 0.646 [0.538, 0.741] (53/82) | $1.8281 |
+| Oracle (per-task winner) | 19/20 | 0.914 [0.832, 0.958] (74/81) | $3.0750 |
 
 There is no best arm — the winner depends on the task, and the task's repo predicts it. The default model's perfect record ended on sympy: 59/59 across the first 14 tasks, 72/83 overall, after resolving 13 of 24 runs on the six new sympy tasks. Sonnet's failures cluster by repo. On django it wins 10 of 12 tasks at pass^1 0.900 (45/50); on sympy it wins none of the seven and resolves 6 of 28 runs (0.214). One task, sympy-11870, is unresolved by every arm (0/4 each) and stands as the dataset's honest frontier: it has no winner and is left out of the Oracle row. Picking the winner on the other 19 tasks gives pass^1 0.914 (74/81) for $3.0750 expected spend, against always-default's $4.2846 over all 20 tasks — 0.718 of it. On the same 19 tasks always-default costs $3.8562, so the like-for-like ratio is 0.797. That gap between "always one agent" and "the right agent per task" is what AgentRouter is being built to capture — and every run above is its future training data. (Aggregates cover every direct run of each arm; probe runs are excluded.)
 
@@ -255,7 +255,7 @@ Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduc
 
 - Agent runs execute under `sandbox-exec`: network is denied except a local proxy that only forwards to `api.anthropic.com`, the project tree is read-denied except `envs/`, and each agent repo is materialized as a single-commit, history-cut checkout of the task's base commit. An adversarial probe run that tried to read the answers found nothing.
 - Costs are API-equivalent estimates from the agent's own trace (`total_cost_usd`) on a Claude Pro subscription — useful for comparisons, not an invoice.
-- n = 20 tasks. These are verified results, not statistics. pass^k, held-out tasks, and confidence intervals arrive with scale, or not at all.
+- n = 20 tasks. These are verified results, not statistics. pass^1 figures now carry 95% Wilson intervals; held-out tasks are still to come.
 
 ## Run it yourself
 
