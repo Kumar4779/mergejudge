@@ -36,7 +36,20 @@ TEST_TIMEOUT_S = 5 * 60  # same test timeout as src/runner.py
 
 # What the dataset cannot tell us: where the repo is cloned here, which
 # Python can run its tests, and which test strategy the repo uses.
-# One entry per task.
+# Per-repo defaults cover any task of that repo, with the env picked by
+# the task's dataset version; a TASK_SETUP entry overrides them for one
+# task (and is the only way to set up repos without defaults).
+REPO_SETUP = {
+    "django/django": {
+        "clone": "repos/django_src",
+        "strategy": "django",
+        "python_by_version": {
+            "3.0": "envs/django-py38/bin/python",
+            "3.1": "envs/django31-py38/bin/python",
+        },
+    },
+}
+
 TASK_SETUP = {
     "sympy__sympy-11400": {
         "clone": "repos/sympy_src",
@@ -117,11 +130,31 @@ def load_task(task_id):
         return json.loads(value) if isinstance(value, str) else list(value)
 
     return {
+        "repo": task["repo"],
+        "version": task["version"],
         "base_commit": task["base_commit"],
         "fail_to_pass": as_list(task["FAIL_TO_PASS"]),
         "pass_to_pass": as_list(task["PASS_TO_PASS"]),
         "test_patch": task["test_patch"],
     }
+
+
+def task_setup(task_id, info):
+    """Per-task override if there is one, else the repo's defaults."""
+    if task_id in TASK_SETUP:
+        return TASK_SETUP[task_id]
+    repo = REPO_SETUP.get(info["repo"])
+    if repo is None:
+        raise SystemExit(f"no setup for {task_id}: add a TASK_SETUP entry "
+                         f"or REPO_SETUP defaults for {info['repo']}")
+    python = repo["python_by_version"].get(info["version"])
+    if python is None:
+        raise SystemExit(f"no env for {info['repo']} version "
+                         f"{info['version']} ({task_id}); add one to "
+                         f"REPO_SETUP python_by_version")
+    setup = {k: v for k, v in repo.items() if k != "python_by_version"}
+    setup["python"] = python
+    return setup
 
 
 def short_name(test_name):
@@ -171,7 +204,7 @@ def parse_django(out):
 
 def grade(task_id, patch_path, agent):
     info = load_task(task_id)
-    setup = TASK_SETUP[task_id]
+    setup = task_setup(task_id, info)
     clone = ROOT / setup["clone"]
     python = ROOT / setup["python"]
     short = task_id.split("__")[-1]
