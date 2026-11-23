@@ -37,6 +37,15 @@ MergeJudge exists to judge *between* agents, so the second arm matters more than
 
 Ranking uses every run, reliability first: on matplotlib a single canonical run would have crowned an arm that resolves only half its runs, so no arm is ranked on one sample again.
 
+### astropy__astropy-12907
+
+| Family | Runs | Resolved | pass^1 | Mean diff (resolved) | Mean cost (all runs) |
+|---|---|---|---|---|---|
+| 1. Claude Sonnet · direct | 4 | 4 | 1.000 | 2.0 | $0.0680 |
+| 2. Claude (default model) · direct | 4 | 4 | 1.000 | 2.0 | $0.1548 |
+
+**Winner: Claude Sonnet · direct** — tie on pass^1 and diff; won on cost: mean $0.0680 vs $0.1548 per run.
+
 ### django__django-10914
 
 | Family | Runs | Resolved | pass^1 | Mean diff (resolved) | Mean cost (all runs) |
@@ -230,13 +239,13 @@ Ranking uses every run, reliability first: on matplotlib a single canonical run 
 
 | Family | Tasks won | Overall pass^1 | Expected spend |
 |---|---|---|---|
-| Claude (default model) · direct | 9/21 | 0.874 [0.788, 0.928] (76/87) | $4.4655 |
-| Claude Sonnet · direct | 11/21 | 0.663 [0.558, 0.754] (57/86) | $1.9020 |
-| Oracle (per-task winner) | 20/21 | 0.918 [0.840, 0.960] (78/85) | $3.1489 |
+| Claude (default model) · direct | 9/22 | 0.879 [0.796, 0.931] (80/91) | $4.6203 |
+| Claude Sonnet · direct | 12/22 | 0.678 [0.576, 0.765] (61/90) | $1.9701 |
+| Oracle (per-task winner) | 21/22 | 0.921 [0.846, 0.961] (82/89) | $3.2169 |
 
-There is no best arm — the winner depends on the task, and the task's repo predicts it. The default model's perfect record ended on sympy: 59/59 across the first 14 tasks, 76/87 overall, after resolving 13 of 24 runs on the six new sympy tasks. Sonnet's failures cluster by repo. On django it wins 10 of 12 tasks at pass^1 0.900 (45/50); on sympy it wins none of the seven and resolves 6 of 28 runs (0.214). On scikit-learn-10297 both arms resolve every run and Sonnet wins on the smaller diff. One task, sympy-11870, is unresolved by every arm (0/4 each) and stands as the dataset's honest frontier: it has no winner and is left out of the Oracle row. Picking the winner on the other 20 tasks gives pass^1 0.918 (78/85) for $3.1489 expected spend, against always-default's $4.4655 over all 21 tasks — 0.705 of it. On the same 20 tasks always-default costs $4.0371, so the like-for-like ratio is 0.780. That gap between "always one agent" and "the right agent per task" is what AgentRouter is being built to capture — and every run above is its future training data. (Aggregates cover every direct run of each arm; probe runs are excluded.)
+There is no best arm — the winner depends on the task, and the task's repo predicts it. The default model's perfect record ended on sympy: 59/59 across the first 14 tasks, 80/91 overall, after resolving 13 of 24 runs on the six new sympy tasks. Sonnet's failures cluster by repo. On django it wins 10 of 12 tasks at pass^1 0.900 (45/50); on sympy it wins none of the seven and resolves 6 of 28 runs (0.214). On scikit-learn-10297 both arms resolve every run and Sonnet wins on the smaller diff; on astropy-12907 both resolve every run with the same 2-line diff and Sonnet wins on cost. One task, sympy-11870, is unresolved by every arm (0/4 each) and stands as the dataset's honest frontier: it has no winner and is left out of the Oracle row. Picking the winner on the other 21 tasks gives pass^1 0.921 (82/89) for $3.2169 expected spend, against always-default's $4.6203 over all 22 tasks — 0.696 of it. On the same 21 tasks always-default costs $4.1919, so the like-for-like ratio is 0.767. That gap between "always one agent" and "the right agent per task" is what AgentRouter is being built to capture — and every run above is its future training data. (Aggregates cover every direct run of each arm; probe runs are excluded.)
 
-The oracle figure is an expected spend, not a measured bill: the sum over tasks of each task's winning arm's mean cost per run — what one run per task costs a router that always picks the winner, the target a router aims at. Running both arms once on every task has an expected spend of $6.3675.
+The oracle figure is an expected spend, not a measured bill: the sum over tasks of each task's winning arm's mean cost per run — what one run per task costs a router that always picks the winner, the target a router aims at. Running both arms once on every task has an expected spend of $6.5904.
 
 ### Scaffold experiment: plan-first vs direct (2x2 factorial)
 
@@ -255,7 +264,7 @@ Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduc
 
 ## What the results actually say
 
-- **Reliability is a property of the repo-and-arm pair.** The cheap arm dominates one repo and collapses on another: on django Sonnet wins 10 of 12 tasks at pass^1 0.900, on sympy it wins none of seven at 0.214. And one task in twenty-one, sympy-11870, defeats both arms outright. A router has to learn the repo, not just the arm.
+- **Reliability is a property of the repo-and-arm pair.** The cheap arm dominates one repo and collapses on another: on django Sonnet wins 10 of 12 tasks at pass^1 0.900, on sympy it wins none of seven at 0.214. And one task in twenty-two, sympy-11870, defeats both arms outright. A router has to learn the repo, not just the arm.
 - **Test-pass is not mergeable.** On django-10914 the agent resolved the task (+12 / −12) but also edited three documentation files the one-line gold fix never touched. The tests can't see that; a reviewer would. MergeJudge records diff size on every run so the difference is visible instead of vibes.
 - **Convergence is not cheating — and we can prove which.** The sympy agent's patch matched a hand-produced patch line-for-line. The stream-json audit trace shows why: 4 tool calls, all inside its own worktree, no access to the saved answers. sympy-11400 is a well-known upstream fix; SWE-bench training-data contamination is a documented caveat that applies to every number here.
 - **Not every agent checks its own work — and checking doesn't save them.** Sonnet's direct runs edit and stop without running a single test on their fix; the default model usually runs the visible tests. The plan-first arms were forced to self-test and it changed no outcome: on sympy the visible tests passed while the hidden grading tests still failed. Self-verification is bounded by the coverage of the tests the agent can see.
@@ -264,7 +273,7 @@ Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduc
 
 - Agent runs execute under `sandbox-exec`: network is denied except a local proxy that only forwards to `api.anthropic.com`, the project tree is read-denied except `envs/`, and each agent repo is materialized as a single-commit, history-cut checkout of the task's base commit. An adversarial probe run that tried to read the answers found nothing.
 - Costs are API-equivalent estimates from the agent's own trace (`total_cost_usd`) on a Claude Pro subscription — useful for comparisons, not an invoice.
-- n = 21 tasks. These are verified results, not statistics. pass^1 figures now carry 95% Wilson intervals; held-out tasks are still to come.
+- n = 22 tasks. These are verified results, not statistics. pass^1 figures now carry 95% Wilson intervals; held-out tasks are still to come.
 - scikit-learn grades in an x86_64 era environment under Rosetta because its 2018 stack predates Apple Silicon; all other repos grade natively.
 
 ## Run it yourself
