@@ -280,12 +280,12 @@ python3 src/runner.py --task django__django-10914 --agent claude-e2e
     patch: path/to/agent.patch
 ```
 
-The check grades the patch against the task's real tests on a clean checkout and fails unless the task resolves, including when the patch touches a test file. The Action is self-tested on `sympy__sympy-11400`, `django__django-10914` and `matplotlib__matplotlib-18869`; the scorer itself grades all 20 tasks locally.
+The check grades the patch against the task's real tests on a clean checkout and fails unless the task resolves, including when the patch touches a test file. The Action is self-tested on `sympy__sympy-11400`, `django__django-10914` and `matplotlib__matplotlib-18869`; the scorer itself grades all 21 tasks locally.
 
 ## Roadmap
 
 - Dataset scale-up in progress: 21 gradeable tasks (django 12, sympy 7, matplotlib 1, scikit-learn 1), rebalancing toward ~30 across repos.
-- scikit-learn-10297 and astropy-12907 extraction still remaining.
+- astropy-12907 extraction still remaining.
 - Confidence intervals and a private holdout slice as the dataset grows.
 - A second *vendor* arm (Codex or Cursor CLI) once an API key exists.
 - AgentRouter once the verified-outcome count supports it.
