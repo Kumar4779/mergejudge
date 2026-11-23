@@ -325,6 +325,6 @@ The check grades the patch against the task's real tests on a clean checkout and
 ## Roadmap
 
 - Dataset scale-up in progress: 22 gradeable tasks (django 12, sympy 7, matplotlib 1, scikit-learn 1, astropy 1), rebalancing toward ~30 across repos.
-- Confidence intervals and a private holdout slice as the dataset grows.
+- Fresh post-cutoff slice: built and gated. It holds 5 sympy tasks merged on or after 2026-01-01, mined from merged PRs, with test lists derived by execution, and every task passes the gold/empty validation gate. It is reported separately and never enters the Portfolio. Agent measurement on it is still to come.
 - A second *vendor* arm (Codex or Cursor CLI) once an API key exists.
 - AgentRouter once the verified-outcome count supports it.
