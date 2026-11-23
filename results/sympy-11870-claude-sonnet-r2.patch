@@ -1,0 +1,28 @@
+diff --git a/sympy/simplify/trigsimp.py b/sympy/simplify/trigsimp.py
+index 34a3bab..e9bf30a 100644
+--- a/sympy/simplify/trigsimp.py
++++ b/sympy/simplify/trigsimp.py
+@@ -538,6 +538,8 @@ def exp_trig(e):
+         if e.has(*_trigs):
+             choices.append(e.rewrite(exp))
+         choices.append(e.rewrite(cos))
++        if e.is_Add and e.has(exp) and e.has(I):
++            choices.append(e.rewrite(cos).expand())
+         return min(*choices, key=count_ops)
+     newexpr = bottom_up(expr, exp_trig)
+ 
+@@ -1095,6 +1097,14 @@ def futrig(e, **kwargs):
+         return e
+ 
+     old = e
++    if e.has(exp) and not e.has(TrigonometricFunction):
++        # exp(I*x) combinations -> trig functions, if that is simpler
++        new = e.rewrite(cos).expand()
++        if (new.has(TrigonometricFunction) and not new.has(exp) and
++                not (new.has(I) and not e.has(I))):
++            new = bottom_up(new, lambda x: _futrig(x, **kwargs))
++            if count_ops(new) < count_ops(e):
++                e = new
+     e = bottom_up(e, lambda x: _futrig(x, **kwargs))
+ 
+     if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):

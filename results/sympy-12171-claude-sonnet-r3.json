@@ -1,0 +1,31 @@
+{
+  "task": "sympy__sympy-12171",
+  "agent": "claude-sonnet-r3",
+  "files_touched": [
+    "sympy/printing/mathematica.py"
+  ],
+  "diff_lines_added": 7,
+  "diff_lines_removed": 0,
+  "test_file_touched": false,
+  "grading_time_s": 1.1,
+  "fail_to_pass": {
+    "passed": 0,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 7,
+    "total": 8
+  },
+  "verdict": "not_resolved",
+  "agent_time_s": 17.2,
+  "agent_status": "completed",
+  "cost_usd": 0.0814654,
+  "agent_config": "claude-code (Sonnet)",
+  "repeat": 3,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

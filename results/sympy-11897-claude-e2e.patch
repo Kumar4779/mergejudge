@@ -1,0 +1,40 @@
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index 1edc712..0d68918 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -6,7 +6,7 @@
+ 
+ import itertools
+ 
+-from sympy.core import S, Add, Symbol, Mod
++from sympy.core import S, Add, Symbol, Mod, Pow
+ from sympy.core.function import _coeff_isneg
+ from sympy.core.sympify import SympifyError
+ from sympy.core.alphabets import greeks
+@@ -228,13 +228,13 @@ def _needs_mul_brackets(self, expr, first=False, last=False):
+         """
+         from sympy import Integral, Piecewise, Product, Sum
+ 
+-        if expr.is_Add:
++        if expr.is_Mul:
++            if not first and _coeff_isneg(expr):
++                return True
++        elif precedence_traditional(expr) < PRECEDENCE["Mul"]:
+             return True
+         elif expr.is_Relational:
+             return True
+-        elif expr.is_Mul:
+-            if not first and _coeff_isneg(expr):
+-                return True
+         if any([expr.has(x) for x in (Mod,)]):
+             return True
+         if (not last and
+@@ -390,7 +390,7 @@ def convert(expr):
+                     last_term_tex = term_tex
+                 return _tex
+ 
+-        if denom is S.One:
++        if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
+             # use the original expression here, since fraction() may have
+             # altered it when producing numer and denom
+             tex += convert(expr)

@@ -1,0 +1,31 @@
+{
+  "task": "sympy__sympy-11897",
+  "agent": "claude-e2e-r1",
+  "files_touched": [
+    "sympy/printing/latex.py"
+  ],
+  "diff_lines_added": 2,
+  "diff_lines_removed": 2,
+  "test_file_touched": false,
+  "grading_time_s": 2.2,
+  "fail_to_pass": {
+    "passed": 0,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 95,
+    "total": 95
+  },
+  "verdict": "not_resolved",
+  "agent_time_s": 98.1,
+  "agent_status": "completed",
+  "cost_usd": 0.4296866,
+  "agent_config": "claude-code (default model, Opus)",
+  "repeat": 1,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-opus-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

@@ -1,0 +1,13 @@
+diff --git a/sympy/simplify/radsimp.py b/sympy/simplify/radsimp.py
+index dca0489..2314863 100644
+--- a/sympy/simplify/radsimp.py
++++ b/sympy/simplify/radsimp.py
+@@ -958,7 +958,7 @@ def fraction(expr, exact=False):
+                 if ex is S.NegativeOne:
+                     denom.append(b)
+                 elif exact:
+-                    if ex.is_constant():
++                    if ex.is_constant() and term.func is not exp:
+                         denom.append(Pow(b, -ex))
+                     else:
+                         numer.append(term)

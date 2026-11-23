@@ -1,0 +1,31 @@
+{
+  "task": "sympy__sympy-12454",
+  "agent": "claude-sonnet-r3",
+  "files_touched": [
+    "sympy/matrices/matrices.py"
+  ],
+  "diff_lines_added": 1,
+  "diff_lines_removed": 1,
+  "test_file_touched": false,
+  "grading_time_s": 20.3,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 2
+  },
+  "pass_to_pass_named": {
+    "passed": 134,
+    "total": 134
+  },
+  "verdict": "not_resolved",
+  "agent_time_s": 5.7,
+  "agent_status": "completed",
+  "cost_usd": 0.051227499999999995,
+  "agent_config": "claude-code (Sonnet)",
+  "repeat": 3,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

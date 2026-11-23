@@ -1,0 +1,14 @@
+diff --git a/sympy/functions/elementary/trigonometric.py b/sympy/functions/elementary/trigonometric.py
+index b2a3f3d..0719aa9 100644
+--- a/sympy/functions/elementary/trigonometric.py
++++ b/sympy/functions/elementary/trigonometric.py
+@@ -399,6 +399,9 @@ def _eval_rewrite_as_cot(self, arg):
+     def _eval_rewrite_as_pow(self, arg):
+         return self.rewrite(cos).rewrite(pow)
+ 
++    def _eval_rewrite_as_sinc(self, arg):
++        return arg*sinc(arg)
++
+     def _eval_rewrite_as_sqrt(self, arg):
+         return self.rewrite(cos).rewrite(sqrt)
+ 

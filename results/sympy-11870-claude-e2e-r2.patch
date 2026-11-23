@@ -1,0 +1,39 @@
+diff --git a/sympy/functions/elementary/trigonometric.py b/sympy/functions/elementary/trigonometric.py
+index b2a3f3d..18283d2 100644
+--- a/sympy/functions/elementary/trigonometric.py
++++ b/sympy/functions/elementary/trigonometric.py
+@@ -408,6 +408,9 @@ def _eval_rewrite_as_csc(self, arg):
+     def _eval_rewrite_as_sec(self, arg):
+         return 1 / sec(arg - S.Pi / 2, evaluate=False)
+ 
++    def _eval_rewrite_as_sinc(self, arg):
++        return arg*sinc(arg)
++
+     def _eval_conjugate(self):
+         return self.func(self.args[0].conjugate())
+ 
+diff --git a/sympy/simplify/trigsimp.py b/sympy/simplify/trigsimp.py
+index 34a3bab..fdf57a6 100644
+--- a/sympy/simplify/trigsimp.py
++++ b/sympy/simplify/trigsimp.py
+@@ -510,7 +510,10 @@ def traverse(e):
+         'old': lambda x: trigsimp_old(x, **opts),
+                    }[method]
+ 
+-    return trigsimpfunc(expr)
++    expr = trigsimpfunc(expr)
++    if method == 'matching' and expr.has(exp):
++        expr = exptrigsimp(expr)
++    return expr
+ 
+ 
+ def exptrigsimp(expr):
+@@ -539,7 +542,7 @@ def exp_trig(e):
+             choices.append(e.rewrite(exp))
+         choices.append(e.rewrite(cos))
+         return min(*choices, key=count_ops)
+-    newexpr = bottom_up(expr, exp_trig)
++    newexpr = bottom_up(factor_terms(expr), exp_trig)
+ 
+     def f(rv):
+         if not rv.is_Mul:

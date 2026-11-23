@@ -1,0 +1,16 @@
+diff --git a/sympy/simplify/trigsimp.py b/sympy/simplify/trigsimp.py
+index 34a3bab..db3df85 100644
+--- a/sympy/simplify/trigsimp.py
++++ b/sympy/simplify/trigsimp.py
+@@ -1096,6 +1096,11 @@ def futrig(e, **kwargs):
+ 
+     old = e
+     e = bottom_up(e, lambda x: _futrig(x, **kwargs))
++    if e.has(exp):
++        # try converting exp(I*x) to trig functions; keep it if simpler
++        trigged = bottom_up(e.rewrite(cos), lambda x: _futrig(x, **kwargs))
++        if count_ops(trigged) < count_ops(e):
++            e = trigged
+ 
+     if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
+         e, f = hyper_as_trig(e)

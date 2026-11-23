@@ -1,0 +1,25 @@
+diff --git a/sympy/printing/mathematica.py b/sympy/printing/mathematica.py
+index 4c2ffd8..673686d 100644
+--- a/sympy/printing/mathematica.py
++++ b/sympy/printing/mathematica.py
+@@ -77,6 +77,10 @@ def _print_Mul(self, expr):
+             res += '**'.join(self.parenthesize(a, PREC) for a in nc)
+         return res
+ 
++    def _print_Float(self, expr):
++        res = super(MCodePrinter, self)._print_Float(expr)
++        return res.replace('e', '*^')
++
+     def _print_Pi(self, expr):
+         return 'Pi'
+ 
+@@ -109,6 +113,9 @@ def _print_Integral(self, expr):
+     def _print_Sum(self, expr):
+         return "Hold[Sum[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
+ 
++    def _print_Derivative(self, expr):
++        return "Hold[D[" + ', '.join(self.doprint(a) for a in expr.args) + "]]"
++
+ 
+ def mathematica_code(expr, **settings):
+     r"""Converts an expr to a string of the Wolfram Mathematica code

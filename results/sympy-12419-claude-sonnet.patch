@@ -1,0 +1,42 @@
+diff --git a/sympy/concrete/summations.py b/sympy/concrete/summations.py
+index 3724876..6bef9c6 100644
+--- a/sympy/concrete/summations.py
++++ b/sympy/concrete/summations.py
+@@ -855,6 +855,9 @@ def eval_sum(f, limits):
+     if a == b:
+         return f.subs(i, a)
+     if isinstance(f, Piecewise):
++        # a leading condition that is just the summation range always holds
++        if f.args[0].cond == And(a <= i, i <= b):
++            return eval_sum(f.args[0].expr, limits)
+         if not any(i in arg.args[1].free_symbols for arg in f.args):
+             # Piecewise conditions do not depend on the dummy summation variable,
+             # therefore we can fold:     Sum(Piecewise((e, c), ...), limits)
+diff --git a/sympy/matrices/expressions/matexpr.py b/sympy/matrices/expressions/matexpr.py
+index b4d7598..2557980 100644
+--- a/sympy/matrices/expressions/matexpr.py
++++ b/sympy/matrices/expressions/matexpr.py
+@@ -4,6 +4,8 @@
+ 
+ from sympy.core import S, Symbol, Tuple, Integer, Basic, Expr
+ from sympy.core.decorators import call_highest_priority
++from sympy.core.relational import Eq
++from sympy.functions.special.tensor_functions import KroneckerDelta
+ from sympy.core.compatibility import range
+ from sympy.core.sympify import SympifyError, sympify
+ from sympy.functions import conjugate, adjoint
+@@ -476,10 +478,12 @@ def conjugate(self):
+         return self
+ 
+     def _entry(self, i, j):
+-        if i == j:
++        eq = Eq(i, j)
++        if eq is S.true:
+             return S.One
+-        else:
++        elif eq is S.false:
+             return S.Zero
++        return KroneckerDelta(i, j)
+ 
+     def _eval_determinant(self):
+         return S.One

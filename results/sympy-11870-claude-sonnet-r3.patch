@@ -1,0 +1,24 @@
+diff --git a/sympy/simplify/trigsimp.py b/sympy/simplify/trigsimp.py
+index 34a3bab..d203d75 100644
+--- a/sympy/simplify/trigsimp.py
++++ b/sympy/simplify/trigsimp.py
+@@ -501,9 +501,18 @@ def traverse(e):
+             return new
+         return trigsimp_groebner(new, **opts)
+ 
++    def _futrig_exp(x):
++        # exponentials of imaginary arguments may simplify to trig functions
++        new = futrig(x)
++        if new.has(exp) and new.has(I):
++            alt = futrig(new.rewrite(cos))
++            if not alt.has(exp) and count_ops(alt) < count_ops(new):
++                return alt
++        return new
++
+     trigsimpfunc = {
+         'fu': (lambda x: fu(x, **opts)),
+-        'matching': (lambda x: futrig(x)),
++        'matching': (lambda x: _futrig_exp(x)),
+         'groebner': (lambda x: groebnersimp(x, **opts)),
+         'combined': (lambda x: futrig(groebnersimp(x,
+                                polynomial=True, hints=[2, tan]))),

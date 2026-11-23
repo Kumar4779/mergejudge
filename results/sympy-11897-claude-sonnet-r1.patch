@@ -1,0 +1,32 @@
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index 1edc712..6b52d1e 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -6,7 +6,7 @@
+ 
+ import itertools
+ 
+-from sympy.core import S, Add, Symbol, Mod
++from sympy.core import S, Add, Symbol, Mod, Pow
+ from sympy.core.function import _coeff_isneg
+ from sympy.core.sympify import SympifyError
+ from sympy.core.alphabets import greeks
+@@ -390,7 +390,7 @@ def convert(expr):
+                     last_term_tex = term_tex
+                 return _tex
+ 
+-        if denom is S.One:
++        if denom is S.One and Pow(1, -1, evaluate=False) not in expr.args:
+             # use the original expression here, since fraction() may have
+             # altered it when producing numer and denom
+             tex += convert(expr)
+@@ -461,7 +461,8 @@ def _print_Pow(self, expr):
+             if expr.base.is_Function:
+                 return self._print(expr.base, "%s/%s" % (p, q))
+             return r"%s^{%s/%s}" % (base, p, q)
+-        elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_commutative:
++        elif expr.exp.is_Rational and expr.exp.is_negative and \
++                expr.base.is_commutative and expr.base is not S.One:
+             # Things like 1/x
+             return self._print_Mul(expr)
+         else:

@@ -1,0 +1,12 @@
+diff --git a/sympy/polys/partfrac.py b/sympy/polys/partfrac.py
+index 612b8f4..9acf556 100644
+--- a/sympy/polys/partfrac.py
++++ b/sympy/polys/partfrac.py
+@@ -127,6 +127,7 @@ def apart(f, x=None, full=False, **options):
+ 
+     common, P, Q = P.cancel(Q)
+ 
++    P, Q = P.to_field(), Q.to_field()
+     poly, P = P.div(Q, auto=True)
+     P, Q = P.rat_clear_denoms(Q)
+ 
