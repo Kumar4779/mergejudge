@@ -58,6 +58,18 @@ REPO_SETUP = {
             "1.1": "envs/sympy-py39/bin/python",
         },
     },
+    "scikit-learn/scikit-learn": {
+        "clone": "repos/scikit-learn_src",
+        "strategy": "pytest",
+        # x86_64 env under Rosetta (see ci/build_env.sh). The worktree's
+        # sklearn/ has no compiled extensions; copy in the ones the env
+        # built from the base commit, as for matplotlib.
+        "overlay": ("envs/scikit-learn-py37/lib/python3.7/site-packages/"
+                    "sklearn", "sklearn"),
+        "python_by_version": {
+            "0.20": "envs/scikit-learn-py37/bin/python",
+        },
+    },
 }
 
 TASK_SETUP = {
