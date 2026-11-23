@@ -1,0 +1,20 @@
+{
+  "task": "sympy__sympy-28914",
+  "agent": "gold",
+  "files_touched": [
+    "sympy/integrals/manualintegrate.py"
+  ],
+  "diff_lines_added": 47,
+  "diff_lines_removed": 2,
+  "test_file_touched": false,
+  "grading_time_s": 28.9,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 33,
+    "total": 33
+  },
+  "verdict": "resolved"
+}

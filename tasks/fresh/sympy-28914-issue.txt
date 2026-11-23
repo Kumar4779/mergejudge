@@ -1,0 +1,18 @@
+integrals: Add G&R 2.263.3 reduction for quadratic forms
+
+#### References to other Issues or PRs
+
+
+
+#### Brief description of what is fixed or changed
+Implemented a recursive reduction rule for integrals involving powers of quadratic forms: `(ax^2 + bx + c)**(n/2)` where `n` is an odd integer < -1.
+
+Previously, manualintegrate would fail to evaluate integrals with higher odd powers, such as `n = -5`. This change allows it to reduce these integrals recursively to lower powers until they reach a solvable base case.
+
+Example:
+```python
+In [1]: manualintegrate(1 / (x**2 + 4*x + 5)**(S(5)/2), x)
+Out[1]: (4*x + 8)/(12*sqrt((x**2 + 4*x + 5)**3)) + (4*x + 8)/(6*sqrt(x**2 + 4*x + 5))
+```
+#### Other comments
+Reference: Gradshteyn & Ryzhik 2.263.3.

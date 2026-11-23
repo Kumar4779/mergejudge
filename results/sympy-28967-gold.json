@@ -1,0 +1,20 @@
+{
+  "task": "sympy__sympy-28967",
+  "agent": "gold",
+  "files_touched": [
+    "sympy/parsing/sympy_parser.py"
+  ],
+  "diff_lines_added": 41,
+  "diff_lines_removed": 3,
+  "test_file_touched": false,
+  "grading_time_s": 13.2,
+  "fail_to_pass": {
+    "passed": 3,
+    "total": 3
+  },
+  "pass_to_pass_named": {
+    "passed": 248,
+    "total": 248
+  },
+  "verdict": "resolved"
+}

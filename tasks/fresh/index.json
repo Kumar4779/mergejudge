@@ -1,0 +1,53 @@
+{
+  "slice": "fresh",
+  "cutoff": "merged on or after 2026-01-01",
+  "built": "2026-11-23",
+  "reported": "separately; never in the Portfolio or any public-task aggregate",
+  "tasks": [
+    {
+      "instance_id": "sympy__sympy-28893",
+      "pr_url": "https://github.com/sympy/sympy/pull/28893",
+      "merged_at": "2026-01-06T14:58:01Z",
+      "base_commit": "23d009afe7404d538a908aa9aeecd81009d6923f",
+      "merge_commit": "fd5d037a88634b39ac4ba1ad1a66dffa3aa24669",
+      "problem_source": "issue",
+      "problem_url": "https://github.com/sympy/sympy/issues/17571"
+    },
+    {
+      "instance_id": "sympy__sympy-28914",
+      "pr_url": "https://github.com/sympy/sympy/pull/28914",
+      "merged_at": "2026-01-10T20:01:49Z",
+      "base_commit": "87e221e7ac7cf049be574928c2f892e8c09e9bd8",
+      "merge_commit": "c5da1b851b55de70e6d14eb6928f1092506e7d5c",
+      "problem_source": "pr_body",
+      "problem_url": "https://github.com/sympy/sympy/pull/28914"
+    },
+    {
+      "instance_id": "sympy__sympy-28956",
+      "pr_url": "https://github.com/sympy/sympy/pull/28956",
+      "merged_at": "2026-01-17T14:38:41Z",
+      "base_commit": "21ec57dc9e133d102bf53f05f305cc2ac52193fa",
+      "merge_commit": "5f8bf9bae0df5e425da0c402fbf95dea75ae7dca",
+      "problem_source": "issue",
+      "problem_url": "https://github.com/sympy/sympy/issues/28219"
+    },
+    {
+      "instance_id": "sympy__sympy-28978",
+      "pr_url": "https://github.com/sympy/sympy/pull/28978",
+      "merged_at": "2026-01-20T14:54:16Z",
+      "base_commit": "5f8bf9bae0df5e425da0c402fbf95dea75ae7dca",
+      "merge_commit": "d671b70c7dc5475aaf6f08daa28fd2c8b15edeca",
+      "problem_source": "issue",
+      "problem_url": "https://github.com/sympy/sympy/issues/28975"
+    },
+    {
+      "instance_id": "sympy__sympy-28967",
+      "pr_url": "https://github.com/sympy/sympy/pull/28967",
+      "merged_at": "2026-01-26T06:39:35Z",
+      "base_commit": "d696c93fbb25f062f963b58a98c0ac1a07fec3fc",
+      "merge_commit": "cef500a3718115d666c76230691f4a79babb74e3",
+      "problem_source": "issue",
+      "problem_url": "https://github.com/sympy/sympy/issues/27832"
+    }
+  ]
+}

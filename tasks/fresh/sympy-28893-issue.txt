@@ -1,0 +1,21 @@
+Wrong result from derivative 
+
+Derivative of incommutative functions:
+
+
+```
+from sympy import *
+t = symbols("t")
+S = Function("S", commutative=False)(t)
+diff(S*S, t)
+```
+
+Result
+```
+2S^2(t) dS/dt S^{-1}(t)
+```
+
+Expected result is 
+```
+S dS/dt + dS/dt S
+```

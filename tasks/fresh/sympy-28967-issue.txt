@@ -1,0 +1,28 @@
+'(1/20)**(1/30)' and '(1/1)**(1/1)' produce unexpected results
+
+```py
+from sympy import S, latex
+from IPython.display import display, Math
+def show(x, n) -> str:
+    return display(Math(latex(S(f"({x})**({n})", evaluate=False))))
+```
+---
+#### Unexpected Format
+```py
+show('1/10','1/20')
+show('1/1','1/1')
+```
+
+![Image](https://github.com/user-attachments/assets/4b226d82-df1a-461f-b48b-95c6db03cded)
+---
+
+#### Expected Format
+```py
+show('10/1','20/1')
+show('2','3/2')
+show('-2','3/2')
+```
+
+![Image](https://github.com/user-attachments/assets/5eb42fad-dc5d-47c9-af77-3fd121f14de1)
+
+---
