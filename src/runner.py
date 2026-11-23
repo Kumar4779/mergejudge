@@ -85,6 +85,9 @@ GENERIC_TEST_HINT = {
                                  "with: {env_python} -m pytest <path> "
                                  "\u2014 pick the tests covering the code "
                                  "you changed.",
+    "astropy/astropy": "You can run the affected tests yourself with: "
+                       "{env_python} -m pytest <path> \u2014 pick the tests "
+                       "covering the code you changed.",
     # PYTHONPATH=lib so the tests import the agent's tree, not the env's
     # base-commit install.
     "matplotlib/matplotlib": "You can run the affected tests yourself with: "

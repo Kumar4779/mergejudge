@@ -1,0 +1,18 @@
+{
+  "task": "astropy__astropy-12907",
+  "agent": "none",
+  "files_touched": [],
+  "diff_lines_added": 0,
+  "diff_lines_removed": 0,
+  "test_file_touched": false,
+  "grading_time_s": 4.3,
+  "fail_to_pass": {
+    "passed": 0,
+    "total": 2
+  },
+  "pass_to_pass_named": {
+    "passed": 13,
+    "total": 13
+  },
+  "verdict": "not_resolved"
+}

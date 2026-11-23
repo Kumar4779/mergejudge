@@ -70,6 +70,17 @@ REPO_SETUP = {
             "0.20": "envs/scikit-learn-py37/bin/python",
         },
     },
+    "astropy/astropy": {
+        "clone": "repos/astropy_src",
+        "strategy": "pytest",
+        # As for matplotlib: copy the env's base-commit .so files and
+        # generated _version.py into the worktree's astropy/.
+        "overlay": ("envs/astropy-py39/lib/python3.9/site-packages/"
+                    "astropy", "astropy"),
+        "python_by_version": {
+            "4.3": "envs/astropy-py39/bin/python",
+        },
+    },
 }
 
 TASK_SETUP = {
