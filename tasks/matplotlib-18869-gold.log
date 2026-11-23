@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.25, pytest-6.2.5, py-1.11.0, pluggy-1.6.0
+rootdir: /Users/dheerajdevnani/Desktop/mergejudge/worktrees/matplotlib-18869-handval, configfile: pytest.ini
+collected 8 items
+
+lib/matplotlib/tests/test_matplotlib.py ........                         [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_parse_to_version_info[3.5.0-version_tuple0]
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_parse_to_version_info[3.5.0rc2-version_tuple1]
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_parse_to_version_info[3.5.0.dev820+g6768ef8c4c-version_tuple2]
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_parse_to_version_info[3.5.0.post820+g6768ef8c4c-version_tuple3]
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_tmpconfigdir_warning
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_importable_with_no_home
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_use_doc_standard_backends
+PASSED lib/matplotlib/tests/test_matplotlib.py::test_importable_with__OO
+============================== 8 passed in 1.48s ===============================
