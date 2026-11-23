@@ -199,7 +199,7 @@ Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduc
 
 ## Threat model and limitations
 
-- Agent isolation is currently *procedural*: isolated temp worktree, prompt rules, and a complete tool-call audit log for every run. It is not yet OS-enforced; `sandbox-exec` isolation is the agreed gate before the dataset is scaled, because a determined agent with filesystem access could still wander.
+- Agent runs execute under `sandbox-exec`: network is denied except a local proxy that only forwards to `api.anthropic.com`, the project tree is read-denied except `envs/`, and each agent repo is materialized as a single-commit, history-cut checkout of the task's base commit. An adversarial probe run that tried to read the answers found nothing.
 - Costs are API-equivalent estimates from the agent's own trace (`total_cost_usd`) on a Claude Pro subscription — useful for comparisons, not an invoice.
 - n = 14 tasks. These are verified results, not statistics. pass^k, held-out tasks, and confidence intervals arrive with scale, or not at all.
 
@@ -225,11 +225,12 @@ python3 src/runner.py --task django__django-10914 --agent claude-e2e
     patch: path/to/agent.patch
 ```
 
-The check grades the patch against the task's real tests on a clean checkout and fails unless the task resolves, including when the patch touches a test file. All three pinned tasks are supported: `sympy__sympy-11400`, `django__django-10914` and `matplotlib__matplotlib-18869`.
+The check grades the patch against the task's real tests on a clean checkout and fails unless the task resolves, including when the patch touches a test file. The Action is self-tested on `sympy__sympy-11400`, `django__django-10914` and `matplotlib__matplotlib-18869`; the scorer itself grades all 14 tasks locally.
 
 ## Roadmap
 
-- Remaining pinned tasks: astropy-12907, matplotlib-18869, scikit-learn-10297 — same recipe: extract, hand-validate both directions, then automated runs.
-- A second *vendor* arm (Codex or Cursor CLI), so the competition crosses providers, not just models.
-- OS-level sandboxing, then dataset scale-up from 5 to ~30 tasks.
-- AgentRouter: a router trained on MergeJudge's verified outcomes — Bradley–Terry arm rankings plus a P(resolved) model with calibrated abstention and a cost–quality Pareto frontier. The dataset this repo produces is its training set.
+- Dataset scale-up in progress: 14 tasks (django 12, sympy 1, matplotlib 1), rebalancing toward ~30 across repos.
+- scikit-learn-10297 and astropy-12907 extraction still remaining.
+- Confidence intervals and a private holdout slice as the dataset grows.
+- A second *vendor* arm (Codex or Cursor CLI) once an API key exists.
+- AgentRouter once the verified-outcome count supports it.
