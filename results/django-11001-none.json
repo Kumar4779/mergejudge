@@ -5,14 +5,14 @@
   "diff_lines_added": 0,
   "diff_lines_removed": 0,
   "test_file_touched": false,
+  "verdict": "not_resolved",
   "grading_time_s": 0.6,
   "fail_to_pass": {
-    "passed": 0,
+    "passed": 1,
     "total": 2
   },
   "pass_to_pass_named": {
     "passed": 118,
     "total": 118
-  },
-  "verdict": "not_resolved"
+  }
 }

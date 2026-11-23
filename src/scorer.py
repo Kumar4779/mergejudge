@@ -170,6 +170,11 @@ def django_label(test_file):
     return ".".join(parts)
 
 
+DJANGO_TEST = re.compile(r"(\S+) \(([\w.]+)\) \.\.\. ")
+DJANGO_RESULT = re.compile(r"(ok|FAIL|ERROR|skipped)(?!\w)")
+DJANGO_NAME_ONLY = re.compile(r"(\S+) \(([\w.]+)\)\s*$")
+
+
 def parse_django(out):
     """Parse runtests.py --verbosity 2 output into {name: status}.
 
@@ -180,25 +185,46 @@ def parse_django(out):
     PASS_TO_PASS format exactly: 'test_name (module.Class)'. Because the
     dataset lists some Django tests by docstring instead, a docstring-style
     test is recorded under both its test-name key and its docstring key.
+
+    A test that fails inside a subTest prints no status at all, so the
+    next test's output runs onto the same line:
+    'test_a (m.C) ... test_b (m.C) ... ok'. Every test on a line is
+    parsed: each name takes the status token right after its ' ... ', and
+    a name followed directly by another name gets none (it did not pass).
     """
     status = {}
     pending = None
     for line in out.splitlines():
-        m = re.match(r"^(\S+) \(([\w.]+)\) \.\.\. (ok|FAIL|ERROR|skipped)",
-                     line)
-        if m:
-            status[f"{m.group(1)} ({m.group(2)})"] = DJANGO_STATUS[m.group(3)]
+        pos = 0
+        if (pending is not None and not DJANGO_TEST.match(line)
+                and not DJANGO_NAME_ONLY.match(line)):
+            # The docstring line of a docstring-style test.
+            m = re.match(r"^(.*?) \.\.\. ", line)
+            if m and DJANGO_TEST.match(line, m.end()):
+                # It printed no status; the next test runs on.
+                pending = None
+                pos = m.end()
+            else:
+                m = re.match(r"^(.*?) \.\.\. (ok|FAIL|ERROR|skipped)", line)
+                if m:
+                    status[pending] = DJANGO_STATUS[m.group(2)]
+                    status[m.group(1)] = DJANGO_STATUS[m.group(2)]
+                    pending = None
+                continue
+        finished = False  # a status token ended this line's chain
+        while m := DJANGO_TEST.match(line, pos):
             pending = None
-            continue
-        m = re.match(r"^(\S+) \(([\w.]+)\)\s*$", line)
-        if m:
-            pending = f"{m.group(1)} ({m.group(2)})"
-            continue
-        m = re.match(r"^(.*?) \.\.\. (ok|FAIL|ERROR|skipped)", line)
-        if m and pending:
-            status[pending] = DJANGO_STATUS[m.group(2)]
-            status[m.group(1)] = DJANGO_STATUS[m.group(2)]
-            pending = None
+            result = DJANGO_RESULT.match(line, m.end())
+            if result:
+                status[f"{m.group(1)} ({m.group(2)})"] = \
+                    DJANGO_STATUS[result.group(1)]
+                finished = True
+                break
+            pos = m.end()  # no status: the next test starts right here
+        if not finished:
+            m = DJANGO_NAME_ONLY.match(line, pos)
+            if m:
+                pending = f"{m.group(1)} ({m.group(2)})"
     return status
 
 
