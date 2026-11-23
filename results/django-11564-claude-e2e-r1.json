@@ -1,0 +1,31 @@
+{
+  "task": "django__django-11564",
+  "agent": "claude-e2e-r1",
+  "files_touched": [
+    "django/conf/__init__.py"
+  ],
+  "diff_lines_added": 28,
+  "diff_lines_removed": 1,
+  "test_file_touched": false,
+  "grading_time_s": 2.3,
+  "fail_to_pass": {
+    "passed": 2,
+    "total": 2
+  },
+  "pass_to_pass_named": {
+    "passed": 174,
+    "total": 174
+  },
+  "verdict": "resolved",
+  "agent_time_s": 56.3,
+  "agent_status": "completed",
+  "cost_usd": 0.185373,
+  "agent_config": "claude-code (default model, Opus)",
+  "repeat": 1,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-opus-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

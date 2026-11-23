@@ -1,0 +1,31 @@
+{
+  "task": "django__django-11019",
+  "agent": "claude-e2e-r3",
+  "files_touched": [
+    "django/forms/widgets.py"
+  ],
+  "diff_lines_added": 44,
+  "diff_lines_removed": 42,
+  "test_file_touched": false,
+  "grading_time_s": 1.6,
+  "fail_to_pass": {
+    "passed": 16,
+    "total": 16
+  },
+  "pass_to_pass_named": {
+    "passed": 58,
+    "total": 58
+  },
+  "verdict": "resolved",
+  "agent_time_s": 70.9,
+  "agent_status": "completed",
+  "cost_usd": 0.34214619999999996,
+  "agent_config": "claude-code (default model, Opus)",
+  "repeat": 3,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-opus-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

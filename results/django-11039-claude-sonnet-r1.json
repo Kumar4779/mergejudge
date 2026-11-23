@@ -1,0 +1,31 @@
+{
+  "task": "django__django-11039",
+  "agent": "claude-sonnet-r1",
+  "files_touched": [
+    "django/core/management/commands/sqlmigrate.py"
+  ],
+  "diff_lines_added": 3,
+  "diff_lines_removed": 2,
+  "test_file_touched": false,
+  "grading_time_s": 2.0,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 88,
+    "total": 88
+  },
+  "verdict": "resolved",
+  "agent_time_s": 6.0,
+  "agent_status": "completed",
+  "cost_usd": 0.0560566,
+  "agent_config": "claude-code (Sonnet)",
+  "repeat": 1,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

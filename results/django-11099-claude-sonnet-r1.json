@@ -1,0 +1,31 @@
+{
+  "task": "django__django-11099",
+  "agent": "claude-sonnet-r1",
+  "files_touched": [
+    "django/contrib/auth/validators.py"
+  ],
+  "diff_lines_added": 2,
+  "diff_lines_removed": 2,
+  "test_file_touched": false,
+  "grading_time_s": 0.6,
+  "fail_to_pass": {
+    "passed": 3,
+    "total": 3
+  },
+  "pass_to_pass_named": {
+    "passed": 19,
+    "total": 19
+  },
+  "verdict": "resolved",
+  "agent_time_s": 5.2,
+  "agent_status": "completed",
+  "cost_usd": 0.05372570000000001,
+  "agent_config": "claude-code (Sonnet)",
+  "repeat": 1,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

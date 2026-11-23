@@ -1,0 +1,30 @@
+{
+  "task": "django__django-11422",
+  "agent": "claude-sonnet",
+  "files_touched": [
+    "django/utils/autoreload.py"
+  ],
+  "diff_lines_added": 9,
+  "diff_lines_removed": 1,
+  "test_file_touched": false,
+  "grading_time_s": 1.0,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 46,
+    "total": 46
+  },
+  "verdict": "resolved",
+  "agent_time_s": 9.5,
+  "agent_status": "completed",
+  "cost_usd": 0.06647020000000001,
+  "agent_config": "claude-code (Sonnet)",
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}
