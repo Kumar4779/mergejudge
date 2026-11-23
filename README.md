@@ -256,6 +256,15 @@ The oracle figure is an expected spend, not a measured bill: the sum over tasks 
 
 The default model always touches the gold files, but it writes about 1.6 times gold's diff and wanders beyond them. On django-10914 its first run touched four files, the one gold file plus three docs files: precision 0.250, with a diff 12 times gold's one-line change (+12 / −12 against +1 / −1). Across its four runs there, the mean is precision 0.312 at 8.25x, while Sonnet's six runs score 1.000 at 1.00x. Sonnet's lower recall is mostly where it fails: on sympy-11870 every Sonnet run edited `trigsimp.py` rather than the gold fix's `trigonometric.py`, for precision and recall of 0.000.
 
+**No-regression.** A resolved verdict already requires every FAIL_TO_PASS and PASS_TO_PASS test to pass. What the verdict hides is how a run fails. `compare.py` therefore buckets every direct run three ways: resolved; unresolved with no regression, where the fix is incomplete but nothing is broken; and regression, where the patch broke at least one PASS_TO_PASS test. The no-regression rate is the share of all runs that broke nothing.
+
+| Family | Runs | Resolved | Unresolved, no regression | Regression | No-regression rate |
+|---|---|---|---|---|---|
+| Claude (default model) · direct | 91 | 80 | 11 | 0 | 1.000 |
+| Claude Sonnet · direct | 90 | 61 | 24 | 5 | 0.944 |
+
+When the default model fails, it fails safe: none of its 11 unresolved runs broke an existing test. When Sonnet fails, 5 of its 29 unresolved runs (17%) broke one, all on sympy (one on 11897, four on 12171). Two of the sympy-12171 runs passed the target test and still broke an existing one. A patch that "passes the failing test" is not a safe patch on that evidence alone. Only the full PASS_TO_PASS gate separates a fix from a fix that breaks something else, which is why MergeJudge never grades on the target tests alone.
+
 ### Scaffold experiment: plan-first vs direct (2x2 factorial)
 
 Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduce the bug, state a plan, fix, then run the affected tests and iterate before finishing.
