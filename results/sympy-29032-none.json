@@ -1,18 +1,18 @@
 {
-  "task": "sympy__sympy-28914",
+  "task": "sympy__sympy-29032",
   "agent": "none",
   "files_touched": [],
   "diff_lines_added": 0,
   "diff_lines_removed": 0,
   "test_file_touched": false,
-  "grading_time_s": 28.1,
+  "grading_time_s": 4.1,
   "fail_to_pass": {
     "passed": 0,
     "total": 1
   },
   "pass_to_pass_named": {
-    "passed": 33,
-    "total": 33
+    "passed": 36,
+    "total": 36
   },
   "verdict": "not_resolved"
 }

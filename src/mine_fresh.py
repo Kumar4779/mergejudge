@@ -30,6 +30,10 @@ validation gate (gold resolved, empty not_resolved) runs afterwards.
 
 Run from the project root, inside the project .venv:
   python3 src/mine_fresh.py --since 2026-01-01 --target 5
+  # continue after the last PR a previous pass processed, issue-sourced
+  # problem statements only, adding to the existing slice:
+  python3 src/mine_fresh.py --resume-after sympy__sympy-28967 --issue-only \
+      --target 1 --append
 """
 
 import argparse
@@ -87,7 +91,7 @@ def strip_template(body):
     return body.strip()
 
 
-def problem_statement(pr):
+def problem_statement(pr, issue_only=False):
     """(source, url, text) or None."""
     numbers = [i["number"] for i in pr.get("closingIssuesReferences") or []]
     numbers += [int(n) for n in CLOSING.findall(pr.get("body") or "")]
@@ -100,6 +104,8 @@ def problem_statement(pr):
         body = (issue.get("body") or "").strip()
         if len(body) >= MIN_ISSUE_BODY:
             return "issue", issue["url"], f"{issue['title']}\n\n{body}\n"
+    if issue_only:
+        return None
     body = strip_template(pr.get("body"))
     if len(body) >= MIN_PR_BODY:
         return "pr_body", pr["url"], f"{pr['title']}\n\n{body}\n"
@@ -225,17 +231,28 @@ def main():
     ap.add_argument("--since", default="2026-01-01")
     ap.add_argument("--target", type=int, default=5,
                     help="stop after this many tasks pass construction")
+    ap.add_argument("--resume-after",
+                    help="skip PRs up to and including this instance ID "
+                         "(in merge order): continue a previous pass")
+    ap.add_argument("--issue-only", action="store_true",
+                    help="require a linked-issue problem statement")
+    ap.add_argument("--append", action="store_true",
+                    help="add kept tasks to the existing index")
     args = ap.parse_args()
 
     prs = merged_prs(args.since)
     print(f"{len(prs)} merged {REPO} PRs on or after {args.since}")
+    if args.resume_after:
+        numbers = [f"sympy__sympy-{p['number']}" for p in prs]
+        prs = prs[numbers.index(args.resume_after) + 1:]
+        print(f"resuming after {args.resume_after}: {len(prs)} PRs left")
     reasons, kept = Counter(), []
     for pr in prs:
         record, reason = construct(pr)
         if record is None:
             reasons[reason.split(" (")[0]] += 1
             continue
-        statement = problem_statement(pr)
+        statement = problem_statement(pr, args.issue_only)
         if statement is None:
             reasons["no usable problem statement"] += 1
             continue
@@ -257,7 +274,12 @@ def main():
             break
     for record in kept:
         write_task(record)
-    write_index(args.since, kept)
+    existing = []
+    if args.append and INDEX.exists():
+        existing = [json.loads((FRESH / f"{t['instance_id'].split('__')[-1]}"
+                                f".json").read_text())
+                    for t in json.loads(INDEX.read_text())["tasks"]]
+    write_index(args.since, existing + kept)
     print(f"\n{len(kept)} task(s) constructed; filtered out before stopping:")
     for reason, n in reasons.most_common():
         print(f"  {n:4d}  {reason}")

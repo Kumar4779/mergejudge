@@ -14,15 +14,6 @@
       "problem_url": "https://github.com/sympy/sympy/issues/17571"
     },
     {
-      "instance_id": "sympy__sympy-28914",
-      "pr_url": "https://github.com/sympy/sympy/pull/28914",
-      "merged_at": "2026-01-10T20:01:49Z",
-      "base_commit": "87e221e7ac7cf049be574928c2f892e8c09e9bd8",
-      "merge_commit": "c5da1b851b55de70e6d14eb6928f1092506e7d5c",
-      "problem_source": "pr_body",
-      "problem_url": "https://github.com/sympy/sympy/pull/28914"
-    },
-    {
       "instance_id": "sympy__sympy-28956",
       "pr_url": "https://github.com/sympy/sympy/pull/28956",
       "merged_at": "2026-01-17T14:38:41Z",
@@ -48,6 +39,15 @@
       "merge_commit": "cef500a3718115d666c76230691f4a79babb74e3",
       "problem_source": "issue",
       "problem_url": "https://github.com/sympy/sympy/issues/27832"
+    },
+    {
+      "instance_id": "sympy__sympy-29032",
+      "pr_url": "https://github.com/sympy/sympy/pull/29032",
+      "merged_at": "2026-01-27T19:36:47Z",
+      "base_commit": "7a943c5a15978e0ac5ade4beebcdbb70660007fd",
+      "merge_commit": "cb7130e0df6b087d4add847f5d85b6606e7c62af",
+      "problem_source": "issue",
+      "problem_url": "https://github.com/sympy/sympy/issues/29031"
     }
   ]
 }
