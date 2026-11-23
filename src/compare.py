@@ -7,7 +7,8 @@ Reads every results/*.json the scorer and runner wrote. For each task:
      Adversarial probe runs (probe_prompt: true) are not data and are
      skipped entirely.
   2. Aggregate EVERY direct-scaffold run of a family on a task: runs,
-     resolved, pass^1 = resolved / runs, mean diff lines (added + removed)
+     resolved, pass^1 = resolved / runs (with a 95% Wilson score
+     interval), mean diff lines (added + removed)
      of the resolved runs, and mean cost of all runs (failures cost too).
   3. Rank families reliability first: highest pass^1, then lowest mean
      diff of resolved runs, then lowest mean cost. No arm is ranked on a
@@ -26,7 +27,7 @@ Run from the project root:
 """
 
 import json
-from math import comb
+from math import comb, sqrt
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -122,9 +123,24 @@ def fmt_mean_cost(agg):
     return text
 
 
+def wilson(resolved, runs, z=1.96):
+    """95% Wilson score interval for resolved / runs."""
+    p = resolved / runs
+    centre = (p + z * z / (2 * runs)) / (1 + z * z / runs)
+    half = (z / (1 + z * z / runs)
+            * sqrt(p * (1 - p) / runs + z * z / (4 * runs * runs)))
+    return centre - half, centre + half
+
+
+def fmt_pass1(resolved, runs):
+    lo, hi = wilson(resolved, runs)
+    return f"{resolved / runs:.3f} [{lo:.3f}, {hi:.3f}]"
+
+
 def agg_row(rank, agg):
     return (f"| {rank}. {agg['family']} | {agg['runs']} | {agg['resolved']} "
-            f"| {agg['pass1']:.3f} | {fmt_diff(agg['mean_diff'])} "
+            f"| {fmt_pass1(agg['resolved'], agg['runs'])} "
+            f"| {fmt_diff(agg['mean_diff'])} "
             f"| {fmt_mean_cost(agg)} |")
 
 
@@ -267,7 +283,7 @@ def overall_pass1(per_task):
     per_task = list(per_task)
     runs = sum(a["runs"] for a in per_task)
     resolved = sum(a["resolved"] for a in per_task)
-    return f"{resolved / runs:.3f} ({resolved}/{runs})"
+    return f"{fmt_pass1(resolved, runs)} ({resolved}/{runs})"
 
 
 def expected_spend(per_task, n_tasks):
