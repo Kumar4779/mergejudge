@@ -1,0 +1,120 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+architecture: 64-bit
+cache:        yes
+ground types: python 
+
+rootdir: /Users/dheerajdevnani/Desktop/mergejudge
+configfile: pyproject.toml
+collected 63 items
+
+sympy/functions/elementary/tests/test_trigonometric.py ................. [ 26%]
+...............................F..............                           [100%]
+
+=================================== FAILURES ===================================
+__________________________ test_sin_cos_with_infinity __________________________
+
+    @XFAIL
+    def test_sin_cos_with_infinity():
+        # Test for issue 5196
+        # https://github.com/sympy/sympy/issues/5196
+>       assert sin(oo) == S.NaN
+E       assert AccumBounds(-1, 1) == nan
+E        +  where AccumBounds(-1, 1) = sin(oo)
+E        +  and   nan = S.NaN
+
+sympy/functions/elementary/tests/test_trigonometric.py:1202: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+    def wrapper():
+        try:
+            func()
+        except Exception as e:
+            message = str(e)
+            if message != "Timeout":
+>               raise XFail(get_function_name(func))
+E               sympy.utilities.pytest.XFail: test_sin_cos_with_infinity
+
+sympy/utilities/pytest.py:121: XFail
+=============================== warnings summary ===============================
+sympy/core/basic.py:3
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-11870/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    from collections import Mapping, defaultdict
+
+sympy/core/containers.py:271
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-11870/sympy/core/containers.py:271: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    class OrderedSet(collections.MutableSet):
+
+sympy/plotting/plot.py:28
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-11870/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    from collections import Callable
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+                                DO *NOT* COMMIT!                                
+=========================== short test summary info ============================
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sin
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sin_cos
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sin_series
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sin_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sin_expansion
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sin_AccumBounds
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_trig_symmetry
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cos
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_issue_6190
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cos_series
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cos_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cos_expansion
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cos_AccumBounds
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_tan
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_tan_series
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_tan_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_tan_subs
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_tan_expansion
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_tan_AccumBounds
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cot
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cot_series
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cot_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cot_subs
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cot_expansion
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_cot_AccumBounds
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sinc
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_asin
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_asin_series
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_asin_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_acos
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_acos_series
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_acos_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_atan
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_atan_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_atan2
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_acot
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_acot_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_attributes
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sincos_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_evenodd_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_issue_4547
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_as_leading_term_issue_5272
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_leading_terms
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_atan2_expansion
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_aseries
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_issue_4420
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_inverses
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_real_imag
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sincos_rewrite_sqrt
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_tancot_rewrite_sqrt
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sec
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_sec_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_csc
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_asec
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_asec_is_real
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_acsc
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_csc_rewrite
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_issue_8653
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_issue_9157
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_trig_period
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_issue_7171
+PASSED sympy/functions/elementary/tests/test_trigonometric.py::test_issue_11864
+FAILED sympy/functions/elementary/tests/test_trigonometric.py::test_sin_cos_with_infinity
+================== 1 failed, 62 passed, 3 warnings in 22.04s ===================

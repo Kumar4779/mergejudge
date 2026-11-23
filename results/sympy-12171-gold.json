@@ -1,0 +1,20 @@
+{
+  "task": "sympy__sympy-12171",
+  "agent": "gold",
+  "files_touched": [
+    "sympy/printing/mathematica.py"
+  ],
+  "diff_lines_added": 3,
+  "diff_lines_removed": 0,
+  "test_file_touched": false,
+  "grading_time_s": 1.0,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 8,
+    "total": 8
+  },
+  "verdict": "resolved"
+}

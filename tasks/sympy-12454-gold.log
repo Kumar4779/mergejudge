@@ -1,0 +1,528 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+architecture: 64-bit
+cache:        yes
+ground types: python 
+
+rootdir: /Users/dheerajdevnani/Desktop/mergejudge
+configfile: pyproject.toml
+collected 152 items
+
+sympy/matrices/tests/test_matrices.py .................................. [ 22%]
+...................................F.................................... [ 69%]
+......F............F..........F...F...........                           [100%]
+
+=================================== FAILURES ===================================
+_______________________________ test_eigen_vects _______________________________
+
+    @XFAIL
+    def test_eigen_vects():
+        m = Matrix(2, 2, [1, 0, 0, I])
+>       raises(NotImplementedError, lambda: m.is_diagonalizable(True))
+
+sympy/matrices/tests/test_matrices.py:1593: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+expectedException = <class 'NotImplementedError'>
+code = <function test_eigen_vects.<locals>.<lambda> at 0x1094d1040>
+
+    def raises(expectedException, code=None):
+        """
+        Tests that ``code`` raises the exception ``expectedException``.
+    
+        ``code`` may be a callable, such as a lambda expression or function
+        name.
+    
+        If ``code`` is not given or None, ``raises`` will return a context
+        manager for use in ``with`` statements; the code to execute then
+        comes from the scope of the ``with``.
+    
+        ``raises()`` does nothing if the callable raises the expected exception,
+        otherwise it raises an AssertionError.
+    
+        Examples
+        ========
+    
+        >>> from sympy.utilities.pytest import raises
+    
+        >>> raises(ZeroDivisionError, lambda: 1/0)
+        >>> raises(ZeroDivisionError, lambda: 1/2)
+        Traceback (most recent call last):
+        ...
+        AssertionError: DID NOT RAISE
+    
+        >>> with raises(ZeroDivisionError):
+        ...     n = 1/0
+        >>> with raises(ZeroDivisionError):
+        ...     n = 1/2
+        Traceback (most recent call last):
+        ...
+        AssertionError: DID NOT RAISE
+    
+        Note that you cannot test multiple statements via
+        ``with raises``:
+    
+        >>> with raises(ZeroDivisionError):
+        ...     n = 1/0    # will execute and raise, aborting the ``with``
+        ...     n = 9999/0 # never executed
+    
+        This is just what ``with`` is supposed to do: abort the
+        contained statement sequence at the first exception and let
+        the context manager deal with the exception.
+    
+        To test multiple statements, you'll need a separate ``with``
+        for each:
+    
+        >>> with raises(ZeroDivisionError):
+        ...     n = 1/0    # will execute and raise
+        >>> with raises(ZeroDivisionError):
+        ...     n = 9999/0 # will also execute and raise
+    
+        """
+        if code is None:
+            return RaisesContext(expectedException)
+        elif callable(code):
+            try:
+                code()
+            except expectedException:
+                return
+>           raise AssertionError("DID NOT RAISE")
+E           AssertionError: DID NOT RAISE
+
+sympy/utilities/pytest.py:81: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+    def wrapper():
+        try:
+            func()
+        except Exception as e:
+            message = str(e)
+            if message != "Timeout":
+>               raise XFail(get_function_name(func))
+E               sympy.utilities.pytest.XFail: test_eigen_vects
+
+sympy/utilities/pytest.py:121: XFail
+_______________________________ test_issue_3959 ________________________________
+
+    @XFAIL
+    def test_issue_3959():
+        x, y = symbols('x, y')
+        e = x*y
+>       assert e.subs(x, Matrix([3, 5, 3])) == Matrix([3, 5, 3])*y
+E       assert y*Matrix([\n[3],\n[5],\n[3]]) == (Matrix([\n[3],\n[5],\n[3]]) * y)
+E        +  where y*Matrix([\n[3],\n[5],\n[3]]) = subs(x, Matrix([\n[3],\n[5],\n[3]]))
+E        +    where subs = x*y.subs
+E        +    and   Matrix([\n[3],\n[5],\n[3]]) = Matrix([3, 5, 3])
+E        +  and   Matrix([\n[3],\n[5],\n[3]]) = Matrix([3, 5, 3])
+
+sympy/matrices/tests/test_matrices.py:2317: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+    def wrapper():
+        try:
+            func()
+        except Exception as e:
+            message = str(e)
+            if message != "Timeout":
+>               raise XFail(get_function_name(func))
+E               sympy.utilities.pytest.XFail: test_issue_3959
+
+sympy/utilities/pytest.py:121: XFail
+_______________________________ test_issue_3979 ________________________________
+
+    @XFAIL
+    def test_issue_3979():
+        # when this passes, delete this and change the [1:2]
+        # to [:2] in the test_hash above for issue 3979
+        cls = classes[0]
+>       raises(AttributeError, lambda: hash(cls.eye(1)))
+
+sympy/matrices/tests/test_matrices.py:2458: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sympy/utilities/pytest.py:78: in raises
+    code()
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+>   raises(AttributeError, lambda: hash(cls.eye(1)))
+E   TypeError: unhashable type: 'MutableDenseMatrix'
+
+sympy/matrices/tests/test_matrices.py:2458: TypeError
+
+During handling of the above exception, another exception occurred:
+
+    def wrapper():
+        try:
+            func()
+        except Exception as e:
+            message = str(e)
+            if message != "Timeout":
+>               raise XFail(get_function_name(func))
+E               sympy.utilities.pytest.XFail: test_issue_3979
+
+sympy/utilities/pytest.py:121: XFail
+___________________________ test_pinv_rank_deficient ___________________________
+
+self = Matrix([
+[1, 1, 1],
+[2, 2, 2]])
+
+    def pinv(self):
+        """Calculate the Moore-Penrose pseudoinverse of the matrix.
+    
+        The Moore-Penrose pseudoinverse exists and is unique for any matrix.
+        If the matrix is invertible, the pseudoinverse is the same as the
+        inverse.
+    
+        Examples
+        ========
+    
+        >>> from sympy import Matrix
+        >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
+        Matrix([
+        [-17/18,  4/9],
+        [  -1/9,  1/9],
+        [ 13/18, -2/9]])
+    
+        See Also
+        ========
+    
+        inv
+        pinv_solve
+    
+        References
+        ==========
+    
+        .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
+    
+        """
+        A = self
+        AH = self.H
+        # Trivial case: pseudoinverse of all-zero matrix is its transpose.
+        if A.is_zero:
+            return AH
+        try:
+            if self.rows >= self.cols:
+                return (AH * A).inv() * AH
+            else:
+>               return AH * (A * AH).inv()
+
+sympy/matrices/matrices.py:4759: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+sympy/matrices/matrices.py:3756: in inv
+    return self._eval_inverse(**kwargs)
+sympy/matrices/dense.py:201: in _eval_inverse
+    rv = M.inverse_GE(iszerofunc=iszerofunc)
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Matrix([
+[3,  6],
+[6, 12]])
+iszerofunc = <function _iszero at 0x108b4b9d0>
+
+    def inverse_GE(self, iszerofunc=_iszero):
+        """Calculates the inverse using Gaussian elimination.
+    
+        See Also
+        ========
+    
+        inv
+        inverse_LU
+        inverse_ADJ
+        """
+        from .dense import Matrix
+        if not self.is_square:
+            raise NonSquareMatrixError("A Matrix must be square to invert.")
+    
+        big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
+        red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
+        if any(iszerofunc(red[j, j]) for j in range(red.rows)):
+>           raise ValueError("Matrix det == 0; not invertible.")
+E           ValueError: Matrix det == 0; not invertible.
+
+sympy/matrices/matrices.py:3671: ValueError
+
+During handling of the above exception, another exception occurred:
+
+    @XFAIL
+    def test_pinv_rank_deficient():
+        # Test the four properties of the pseudoinverse for various matrices.
+        As = [Matrix([[1, 1, 1], [2, 2, 2]]),
+              Matrix([[1, 0], [0, 0]])]
+        for A in As:
+>           A_pinv = A.pinv()
+
+sympy/matrices/tests/test_matrices.py:2590: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = Matrix([
+[1, 1, 1],
+[2, 2, 2]])
+
+    def pinv(self):
+        """Calculate the Moore-Penrose pseudoinverse of the matrix.
+    
+        The Moore-Penrose pseudoinverse exists and is unique for any matrix.
+        If the matrix is invertible, the pseudoinverse is the same as the
+        inverse.
+    
+        Examples
+        ========
+    
+        >>> from sympy import Matrix
+        >>> Matrix([[1, 2, 3], [4, 5, 6]]).pinv()
+        Matrix([
+        [-17/18,  4/9],
+        [  -1/9,  1/9],
+        [ 13/18, -2/9]])
+    
+        See Also
+        ========
+    
+        inv
+        pinv_solve
+    
+        References
+        ==========
+    
+        .. [1] https://en.wikipedia.org/wiki/Moore-Penrose_pseudoinverse
+    
+        """
+        A = self
+        AH = self.H
+        # Trivial case: pseudoinverse of all-zero matrix is its transpose.
+        if A.is_zero:
+            return AH
+        try:
+            if self.rows >= self.cols:
+                return (AH * A).inv() * AH
+            else:
+                return AH * (A * AH).inv()
+        except ValueError:
+            # Matrix is not full rank, so A*AH cannot be inverted.
+>           raise NotImplementedError('Rank-deficient matrices are not yet '
+                                      'supported.')
+E           NotImplementedError: Rank-deficient matrices are not yet supported.
+
+sympy/matrices/matrices.py:4762: NotImplementedError
+
+During handling of the above exception, another exception occurred:
+
+    def wrapper():
+        try:
+            func()
+        except Exception as e:
+            message = str(e)
+            if message != "Timeout":
+>               raise XFail(get_function_name(func))
+E               sympy.utilities.pytest.XFail: test_pinv_rank_deficient
+
+sympy/utilities/pytest.py:121: XFail
+______________________________ test_from_ndarray _______________________________
+
+    def test_from_ndarray():
+        """See issue 7465."""
+        try:
+>           from numpy import array
+E           ModuleNotFoundError: No module named 'numpy'
+
+sympy/matrices/tests/test_matrices.py:2729: ModuleNotFoundError
+
+During handling of the above exception, another exception occurred:
+
+    def test_from_ndarray():
+        """See issue 7465."""
+        try:
+            from numpy import array
+        except ImportError:
+>           skip('NumPy must be available to test creating matrices from ndarrays')
+
+sympy/matrices/tests/test_matrices.py:2731: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+str = 'NumPy must be available to test creating matrices from ndarrays'
+
+    def skip(str):
+>       raise Skipped(str)
+E       sympy.utilities.pytest.Skipped: NumPy must be available to test creating matrices from ndarrays
+
+sympy/utilities/pytest.py:130: Skipped
+=============================== warnings summary ===============================
+sympy/core/basic.py:3
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-12454/sympy/core/basic.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    from collections import Mapping
+
+sympy/matrices/matrices.py:3589
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-12454/sympy/matrices/matrices.py:3589: DeprecationWarning: invalid escape sequence \m
+    """
+
+sympy/plotting/plot.py:28
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-12454/sympy/plotting/plot.py:28: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    from collections import Callable
+
+worktrees/handval-sympy-12454/sympy/matrices/tests/test_matrices.py::test_refine
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-12454/sympy/assumptions/sathandlers.py:3: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    from collections import MutableMapping, defaultdict
+
+worktrees/handval-sympy-12454/sympy/matrices/tests/test_matrices.py::test_hash
+  /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-sympy-12454/sympy/matrices/tests/test_matrices.py:2450: DeprecationWarning: Using or importing the ABCs from 'collections' instead of from 'collections.abc' is deprecated since Python 3.3, and in 3.10 it will stop working
+    assert not isinstance(cls.eye(1), collections.Hashable)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+                                DO *NOT* COMMIT!                                
+=========================== short test summary info ============================
+PASSED sympy/matrices/tests/test_matrices.py::test_args
+PASSED sympy/matrices/tests/test_matrices.py::test_division
+PASSED sympy/matrices/tests/test_matrices.py::test_sum
+PASSED sympy/matrices/tests/test_matrices.py::test_addition
+PASSED sympy/matrices/tests/test_matrices.py::test_fancy_index_matrix
+PASSED sympy/matrices/tests/test_matrices.py::test_multiplication
+PASSED sympy/matrices/tests/test_matrices.py::test_power
+PASSED sympy/matrices/tests/test_matrices.py::test_creation
+PASSED sympy/matrices/tests/test_matrices.py::test_tolist
+PASSED sympy/matrices/tests/test_matrices.py::test_as_mutable
+PASSED sympy/matrices/tests/test_matrices.py::test_determinant
+PASSED sympy/matrices/tests/test_matrices.py::test_det_LU_decomposition
+PASSED sympy/matrices/tests/test_matrices.py::test_berkowitz_minors
+PASSED sympy/matrices/tests/test_matrices.py::test_slicing
+PASSED sympy/matrices/tests/test_matrices.py::test_submatrix_assignment
+PASSED sympy/matrices/tests/test_matrices.py::test_extract
+PASSED sympy/matrices/tests/test_matrices.py::test_reshape
+PASSED sympy/matrices/tests/test_matrices.py::test_applyfunc
+PASSED sympy/matrices/tests/test_matrices.py::test_expand
+PASSED sympy/matrices/tests/test_matrices.py::test_refine
+PASSED sympy/matrices/tests/test_matrices.py::test_random
+PASSED sympy/matrices/tests/test_matrices.py::test_LUdecomp
+PASSED sympy/matrices/tests/test_matrices.py::test_LUsolve
+PASSED sympy/matrices/tests/test_matrices.py::test_QRsolve
+PASSED sympy/matrices/tests/test_matrices.py::test_inverse
+PASSED sympy/matrices/tests/test_matrices.py::test_matrix_inverse_mod
+PASSED sympy/matrices/tests/test_matrices.py::test_util
+PASSED sympy/matrices/tests/test_matrices.py::test_jacobian_hessian
+PASSED sympy/matrices/tests/test_matrices.py::test_QR
+PASSED sympy/matrices/tests/test_matrices.py::test_QR_non_square
+PASSED sympy/matrices/tests/test_matrices.py::test_nullspace
+PASSED sympy/matrices/tests/test_matrices.py::test_columnspace
+PASSED sympy/matrices/tests/test_matrices.py::test_wronskian
+PASSED sympy/matrices/tests/test_matrices.py::test_eigen
+PASSED sympy/matrices/tests/test_matrices.py::test_subs
+PASSED sympy/matrices/tests/test_matrices.py::test_xreplace
+PASSED sympy/matrices/tests/test_matrices.py::test_simplify
+PASSED sympy/matrices/tests/test_matrices.py::test_transpose
+PASSED sympy/matrices/tests/test_matrices.py::test_conjugate
+PASSED sympy/matrices/tests/test_matrices.py::test_conj_dirac
+PASSED sympy/matrices/tests/test_matrices.py::test_trace
+PASSED sympy/matrices/tests/test_matrices.py::test_shape
+PASSED sympy/matrices/tests/test_matrices.py::test_col_row_op
+PASSED sympy/matrices/tests/test_matrices.py::test_zip_row_op
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_3950
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_3981
+PASSED sympy/matrices/tests/test_matrices.py::test_evalf
+PASSED sympy/matrices/tests/test_matrices.py::test_is_symbolic
+PASSED sympy/matrices/tests/test_matrices.py::test_is_upper
+PASSED sympy/matrices/tests/test_matrices.py::test_is_lower
+PASSED sympy/matrices/tests/test_matrices.py::test_is_nilpotent
+PASSED sympy/matrices/tests/test_matrices.py::test_zeros_ones_fill
+PASSED sympy/matrices/tests/test_matrices.py::test_empty_zeros
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_3749
+PASSED sympy/matrices/tests/test_matrices.py::test_inv_iszerofunc
+PASSED sympy/matrices/tests/test_matrices.py::test_jacobian_metrics
+PASSED sympy/matrices/tests/test_matrices.py::test_jacobian2
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_4564
+PASSED sympy/matrices/tests/test_matrices.py::test_nonvectorJacobian
+PASSED sympy/matrices/tests/test_matrices.py::test_vec
+PASSED sympy/matrices/tests/test_matrices.py::test_vech
+PASSED sympy/matrices/tests/test_matrices.py::test_vech_errors
+PASSED sympy/matrices/tests/test_matrices.py::test_diag
+PASSED sympy/matrices/tests/test_matrices.py::test_get_diag_blocks1
+PASSED sympy/matrices/tests/test_matrices.py::test_get_diag_blocks2
+PASSED sympy/matrices/tests/test_matrices.py::test_inv_block
+PASSED sympy/matrices/tests/test_matrices.py::test_creation_args
+PASSED sympy/matrices/tests/test_matrices.py::test_diagonal_symmetrical
+PASSED sympy/matrices/tests/test_matrices.py::test_diagonalization
+PASSED sympy/matrices/tests/test_matrices.py::test_jordan_form
+PASSED sympy/matrices/tests/test_matrices.py::test_jordan_form_complex_issue_9274
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_10220
+PASSED sympy/matrices/tests/test_matrices.py::test_Matrix_berkowitz_charpoly
+PASSED sympy/matrices/tests/test_matrices.py::test_exp
+PASSED sympy/matrices/tests/test_matrices.py::test_has
+PASSED sympy/matrices/tests/test_matrices.py::test_errors
+PASSED sympy/matrices/tests/test_matrices.py::test_len
+PASSED sympy/matrices/tests/test_matrices.py::test_integrate
+PASSED sympy/matrices/tests/test_matrices.py::test_limit
+PASSED sympy/matrices/tests/test_matrices.py::test_diff
+PASSED sympy/matrices/tests/test_matrices.py::test_getattr
+PASSED sympy/matrices/tests/test_matrices.py::test_hessenberg
+PASSED sympy/matrices/tests/test_matrices.py::test_cholesky
+PASSED sympy/matrices/tests/test_matrices.py::test_LDLdecomposition
+PASSED sympy/matrices/tests/test_matrices.py::test_cholesky_solve
+PASSED sympy/matrices/tests/test_matrices.py::test_LDLsolve
+PASSED sympy/matrices/tests/test_matrices.py::test_lower_triangular_solve
+PASSED sympy/matrices/tests/test_matrices.py::test_upper_triangular_solve
+PASSED sympy/matrices/tests/test_matrices.py::test_diagonal_solve
+PASSED sympy/matrices/tests/test_matrices.py::test_matrix_norm
+PASSED sympy/matrices/tests/test_matrices.py::test_singular_values
+PASSED sympy/matrices/tests/test_matrices.py::test_condition_number
+PASSED sympy/matrices/tests/test_matrices.py::test_equality
+PASSED sympy/matrices/tests/test_matrices.py::test_col_join
+PASSED sympy/matrices/tests/test_matrices.py::test_row_insert
+PASSED sympy/matrices/tests/test_matrices.py::test_col_insert
+PASSED sympy/matrices/tests/test_matrices.py::test_normalized
+PASSED sympy/matrices/tests/test_matrices.py::test_print_nonzero
+PASSED sympy/matrices/tests/test_matrices.py::test_zeros_eye
+PASSED sympy/matrices/tests/test_matrices.py::test_is_zero
+PASSED sympy/matrices/tests/test_matrices.py::test_rotation_matrices
+PASSED sympy/matrices/tests/test_matrices.py::test_DeferredVector
+PASSED sympy/matrices/tests/test_matrices.py::test_DeferredVector_not_iterable
+PASSED sympy/matrices/tests/test_matrices.py::test_DeferredVector_Matrix
+PASSED sympy/matrices/tests/test_matrices.py::test_GramSchmidt
+PASSED sympy/matrices/tests/test_matrices.py::test_casoratian
+PASSED sympy/matrices/tests/test_matrices.py::test_zero_dimension_multiply
+PASSED sympy/matrices/tests/test_matrices.py::test_slice_issue_2884
+PASSED sympy/matrices/tests/test_matrices.py::test_slice_issue_3401
+PASSED sympy/matrices/tests/test_matrices.py::test_copyin
+PASSED sympy/matrices/tests/test_matrices.py::test_invertible_check
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_5964
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_7604
+PASSED sympy/matrices/tests/test_matrices.py::test_is_Identity
+PASSED sympy/matrices/tests/test_matrices.py::test_dot
+PASSED sympy/matrices/tests/test_matrices.py::test_dual
+PASSED sympy/matrices/tests/test_matrices.py::test_anti_symmetric
+PASSED sympy/matrices/tests/test_matrices.py::test_normalize_sort_diogonalization
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_5321
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_5320
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_11944
+PASSED sympy/matrices/tests/test_matrices.py::test_cross
+PASSED sympy/matrices/tests/test_matrices.py::test_hash
+PASSED sympy/matrices/tests/test_matrices.py::test_adjoint
+PASSED sympy/matrices/tests/test_matrices.py::test_simplify_immutable
+PASSED sympy/matrices/tests/test_matrices.py::test_rank
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_11434
+PASSED sympy/matrices/tests/test_matrices.py::test_rank_regression_from_so
+PASSED sympy/matrices/tests/test_matrices.py::test_replace
+PASSED sympy/matrices/tests/test_matrices.py::test_replace_map
+PASSED sympy/matrices/tests/test_matrices.py::test_atoms
+PASSED sympy/matrices/tests/test_matrices.py::test_pinv
+PASSED sympy/matrices/tests/test_matrices.py::test_pinv_solve
+PASSED sympy/matrices/tests/test_matrices.py::test_gauss_jordan_solve
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_7201
+PASSED sympy/matrices/tests/test_matrices.py::test_free_symbols
+PASSED sympy/matrices/tests/test_matrices.py::test_hermitian
+PASSED sympy/matrices/tests/test_matrices.py::test_doit
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_9457_9467_9876
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_9422
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_10770
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_10658
+PASSED sympy/matrices/tests/test_matrices.py::test_opportunistic_simplification
+PASSED sympy/matrices/tests/test_matrices.py::test_partial_pivoting
+PASSED sympy/matrices/tests/test_matrices.py::test_iszero_substitution
+PASSED sympy/matrices/tests/test_matrices.py::test_issue_11238
+PASSED sympy/matrices/tests/test_matrices.py::test_as_real_imag
+FAILED sympy/matrices/tests/test_matrices.py::test_eigen_vects - sympy.utilit...
+FAILED sympy/matrices/tests/test_matrices.py::test_issue_3959 - sympy.utiliti...
+FAILED sympy/matrices/tests/test_matrices.py::test_issue_3979 - sympy.utiliti...
+FAILED sympy/matrices/tests/test_matrices.py::test_pinv_rank_deficient - symp...
+FAILED sympy/matrices/tests/test_matrices.py::test_from_ndarray - sympy.utili...
+================== 5 failed, 147 passed, 5 warnings in 20.60s ==================

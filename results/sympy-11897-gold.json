@@ -1,0 +1,20 @@
+{
+  "task": "sympy__sympy-11897",
+  "agent": "gold",
+  "files_touched": [
+    "sympy/printing/latex.py"
+  ],
+  "diff_lines_added": 3,
+  "diff_lines_removed": 1,
+  "test_file_touched": false,
+  "grading_time_s": 1.9,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 95,
+    "total": 95
+  },
+  "verdict": "resolved"
+}
