@@ -27,6 +27,6 @@
       "no trace"
     ],
     "tool_calls": 0,
-    "scanner": "integrity-v1"
+    "scanner": "integrity-v2"
   }
 }

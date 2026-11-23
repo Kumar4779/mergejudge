@@ -24,6 +24,6 @@
     "outcome": "clean",
     "reasons": [],
     "tool_calls": 4,
-    "scanner": "integrity-v1"
+    "scanner": "integrity-v2"
   }
 }

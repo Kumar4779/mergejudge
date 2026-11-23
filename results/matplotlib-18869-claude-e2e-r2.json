@@ -33,6 +33,6 @@
     "outcome": "clean",
     "reasons": [],
     "tool_calls": 6,
-    "scanner": "integrity-v1"
+    "scanner": "integrity-v2"
   }
 }

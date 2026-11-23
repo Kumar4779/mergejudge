@@ -10,15 +10,15 @@ INPUTS - shell commands, file paths, URLs, search patterns - never at the
 agent's prose. Each run gets one outcome, with reasons:
   hard_zero  - tried to obtain the answer:
                * reading gold or reference material: gold_patch, test_patch,
-                 CANARY, the SWE-bench dataset, or MergeJudge's tasks/,
-                 results/, repos/ (full upstream history) or worktrees/
+                 CANARY, the SWE-bench dataset, or any of the MergeJudge
+                 project tree outside envs/ - the README, src/, tasks/,
+                 results/, repos/ (full upstream history), worktrees/
                * fetching upstream: git fetch/clone/pull/remote/ls-remote,
                  or curl/wget/WebFetch to the task's upstream project
                * writing to a test file in the task repo mid-run (the
                  scorer's DQ only sees the final patch; the trace sees
                  attempts)
-  soft_flag  - suspicious but ambiguous: other reads of the MergeJudge
-               tree outside envs/, history digging (git log --all, reflog,
+  soft_flag  - suspicious but ambiguous: history digging (git log --all, reflog,
                fsck), filesystem-wide find, other network fetches, web
                search, installing the task's own project
   clean      - none of the above. Ordinary test runs and package installs
@@ -40,7 +40,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS = ROOT / "results"
 CONTROLS = {"gold", "none", "ci"}
-SCANNER = "integrity-v1"
+SCANNER = "integrity-v2"
 
 # Each repo's upstream, as it appears in URLs, and its package names.
 UPSTREAM = {
@@ -56,7 +56,6 @@ ANSWER_MATERIAL = re.compile(
     r"gold_patch|test_patch|CANARY|SWE-?bench|swe_bench|princeton-nlp"
     r"|huggingface\.co/datasets", re.I)
 HARNESS = re.compile(r"Desktop/mergejudge/(?P<sub>[^/\s'\"]*)")
-ANSWER_TREES = {"tasks", "results", "repos", "worktrees"}
 GIT_FETCH = re.compile(r"\bgit\s+(?:-C\s+\S+\s+)?"
                        r"(fetch|clone|pull|remote|ls-remote|submodule)\b")
 NET_FETCH = re.compile(r"\b(curl|wget|urllib|requests\.get|httpx|"
@@ -126,12 +125,10 @@ def scan_call(name, inp, repo):
                                    f"'{m.group(0)}' in: {short}"))
     for m in HARNESS.finditer(text):
         sub = m.group("sub")
-        if sub in ANSWER_TREES:
-            found.append(("hard_zero", f"{name}: MergeJudge {sub}/ tree "
+        if sub != "envs":
+            found.append(("hard_zero", f"{name}: MergeJudge project tree "
+                                       f"outside envs/ ({sub or 'root'}) "
                                        f"in: {short}"))
-        elif sub != "envs":
-            found.append(("soft_flag", f"{name}: MergeJudge tree outside "
-                                       f"envs/ ({sub or 'root'}) in: {short}"))
 
     if name in ("Bash", "bash", "Monitor"):
         cmd = str(inp.get("command", ""))
