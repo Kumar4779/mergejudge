@@ -1,0 +1,20 @@
+{
+  "task": "django__django-11564",
+  "agent": "gold",
+  "files_touched": [
+    "django/conf/__init__.py"
+  ],
+  "diff_lines_added": 30,
+  "diff_lines_removed": 1,
+  "test_file_touched": false,
+  "grading_time_s": 2.3,
+  "fail_to_pass": {
+    "passed": 2,
+    "total": 2
+  },
+  "pass_to_pass_named": {
+    "passed": 174,
+    "total": 174
+  },
+  "verdict": "resolved"
+}

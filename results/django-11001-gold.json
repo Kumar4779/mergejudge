@@ -1,0 +1,20 @@
+{
+  "task": "django__django-11001",
+  "agent": "gold",
+  "files_touched": [
+    "django/db/models/sql/compiler.py"
+  ],
+  "diff_lines_added": 2,
+  "diff_lines_removed": 1,
+  "test_file_touched": false,
+  "grading_time_s": 0.6,
+  "fail_to_pass": {
+    "passed": 2,
+    "total": 2
+  },
+  "pass_to_pass_named": {
+    "passed": 118,
+    "total": 118
+  },
+  "verdict": "resolved"
+}

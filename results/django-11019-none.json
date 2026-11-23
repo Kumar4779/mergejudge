@@ -1,0 +1,18 @@
+{
+  "task": "django__django-11019",
+  "agent": "none",
+  "files_touched": [],
+  "diff_lines_added": 0,
+  "diff_lines_removed": 0,
+  "test_file_touched": false,
+  "grading_time_s": 1.4,
+  "fail_to_pass": {
+    "passed": 0,
+    "total": 16
+  },
+  "pass_to_pass_named": {
+    "passed": 58,
+    "total": 58
+  },
+  "verdict": "not_resolved"
+}
