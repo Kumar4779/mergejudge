@@ -125,7 +125,7 @@ python3 src/runner.py --task django__django-10914 --agent claude-e2e
     patch: path/to/agent.patch
 ```
 
-The check grades the patch against the task's real tests on a clean checkout and fails unless the task resolves, including when the patch touches a test file. CI environment setup currently covers `sympy__sympy-11400`; other tasks fail fast with a clear error until their recipe is added to `ci/setup_task.sh`.
+The check grades the patch against the task's real tests on a clean checkout and fails unless the task resolves, including when the patch touches a test file. All three pinned tasks are supported: `sympy__sympy-11400`, `django__django-10914` and `matplotlib__matplotlib-18869`.
 
 ## Roadmap
 
