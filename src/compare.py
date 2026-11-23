@@ -12,7 +12,9 @@ Reads every results/*.json the scorer and runner wrote. For each task:
   3. Rank families reliability first: highest pass^1, then lowest mean
      diff of resolved runs, then lowest mean cost. No arm is ranked on a
      single sample. Only direct-scaffold families are ranked here and in
-     the Portfolio.
+     the Portfolio. A task where no direct family resolved any run has
+     no winner: it counts toward no family's tasks won and is left out
+     of the Oracle row.
 Then a portfolio summary per family (tasks won, overall pass^1, expected
 spend = sum of per-task mean costs), plus an Oracle row that takes each
 task's winner, and a reliability table: every run (repeats included) per
@@ -127,8 +129,6 @@ def agg_row(rank, agg):
 
 
 def win_basis(winner, runner_up):
-    if winner["resolved"] == 0:
-        return "no arm resolved the task"
     if runner_up is None:
         return "only arm run"
     if winner["pass1"] != runner_up["pass1"]:
@@ -177,7 +177,9 @@ def main():
             for r in sorted(controls, key=agent_name):
                 print(row(agent_name(r), r))
 
-        if ranked:
+        if ranked and ranked[0]["resolved"] == 0:
+            print("\nNo winner — no arm resolved this task.\n")
+        elif ranked:
             winner = ranked[0]
             winners[task] = winner
             runner_up = ranked[1] if len(ranked) > 1 else None
@@ -193,9 +195,10 @@ def main():
         won = sum(1 for w in winners.values() if w["family"] == fam)
         print(f"| {fam} | {won}/{n} | {overall_pass1(per_task)} "
               f"| {expected_spend(per_task, n)} |")
+    # The Oracle covers only tasks with a winner.
     print(f"| Oracle (per-task winner) | {len(winners)}/{n} "
           f"| {overall_pass1(winners.values())} "
-          f"| {expected_spend(winners.values(), n)} |")
+          f"| {expected_spend(winners.values(), len(winners))} |")
 
     reliability(records, tasks)
     factorial(records, tasks)
