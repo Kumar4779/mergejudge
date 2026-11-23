@@ -150,7 +150,45 @@ def is_cheating_file(path):
     return "tests" in parts or name.startswith("test_") or name in CONFIG_NAMES
 
 
+# Fresh slice (post-cutoff tasks mined by src/mine_fresh.py): records live
+# in tasks/fresh/, listed in its index, and grade in a modern env band.
+# Slice-level, keyed by repo; public tasks never resolve here.
+FRESH_DIR = ROOT / "tasks" / "fresh"
+FRESH_SETUP = {
+    "sympy/sympy": {
+        "clone": "repos/sympy_src",
+        "python": "envs/sympy-modern/bin/python",
+        "strategy": "pytest",
+    },
+}
+
+
+def fresh_ids():
+    index = FRESH_DIR / "index.json"
+    if not index.exists():
+        return set()
+    return {t["instance_id"] for t in json.loads(index.read_text())["tasks"]}
+
+
+def load_fresh(task_id):
+    record = json.loads((FRESH_DIR / f"{task_id.split('__')[-1]}.json")
+                        .read_text())
+    return {
+        "repo": record["repo"],
+        "version": record["version"],
+        "slice": "fresh",
+        "base_commit": record["base_commit"],
+        "fail_to_pass": record["FAIL_TO_PASS"],
+        "pass_to_pass": record["PASS_TO_PASS"],
+        "test_patch": record["test_patch"],
+        "test_files": record["test_files"],
+        "issue": record["problem_statement"],
+    }
+
+
 def load_task(task_id):
+    if task_id in fresh_ids():
+        return load_fresh(task_id)
     ds = load_dataset("princeton-nlp/SWE-bench_Lite", split="test")
     task = next(x for x in ds if x["instance_id"] == task_id)
 
@@ -169,6 +207,8 @@ def load_task(task_id):
 
 def task_setup(task_id, info):
     """Per-task override if there is one, else the repo's defaults."""
+    if info.get("slice") == "fresh":
+        return FRESH_SETUP[info["repo"]]
     if task_id in TASK_SETUP:
         return TASK_SETUP[task_id]
     repo = REPO_SETUP.get(info["repo"])
@@ -342,7 +382,8 @@ def grade(task_id, patch_path, agent):
                 status = parse_django(out)
                 key = lambda name: name
             else:
-                test_files = patch_files(info["test_patch"])
+                test_files = (info.get("test_files")
+                              or patch_files(info["test_patch"]))
                 apply_overlay(setup, worktree)
                 env = (dict(os.environ, PYTHONPATH=setup["pythonpath"])
                        if "pythonpath" in setup else None)

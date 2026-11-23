@@ -20,6 +20,12 @@ case "$name" in
     py_version="3.8"
     packages=("pytz==2026.6" "sqlparse==0.5.5" "asgiref==3.2.2")
     ;;
+  sympy-modern)  # Fresh-slice sympy tasks (post-cutoff, current sympy
+                 # master): a modern band, not the 1.0-era envs/sympy-py39.
+                 # hypothesis: required by current sympy/conftest.py.
+    py_version="3.12"
+    packages=("mpmath==1.3.0" "pytest==9.2.0" "hypothesis==6.170.17")
+    ;;
   scikit-learn-py37)
     # scikit-learn 0.20-era tasks. This env is x86_64 under Rosetta: the
     # 0.20-era stack (Python 3.7, numpy 1.16, scipy 1.2) predates Apple
