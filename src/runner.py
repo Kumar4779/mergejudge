@@ -38,13 +38,16 @@ from pathlib import Path
 from datasets import load_dataset
 
 import egress_proxy
+import scorer
 from scorer import apply_overlay
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENT_TIMEOUT_S = 30 * 60  # hard kill for the agent run (sandbox contract)
 
-# Same per-task facts as the scorer: where the repo is cloned here, and
-# which Python can run its tests. One entry per task.
+# Task setup (clone, env python, overlay) comes from the scorer's
+# task_setup(): per-repo defaults, env by dataset version. These entries
+# override it for the original three tasks, so their prompts (including
+# their test hints) stay exactly as they were.
 TASK_SETUP = {
     "sympy__sympy-11400": {
         "clone": "repos/sympy_src",
@@ -67,6 +70,32 @@ TASK_SETUP = {
                     "matplotlib", "lib/matplotlib"),
     },
 }
+
+# Test hint for tasks without an override: mechanics only. It names no
+# test module, file or test, so nothing about the hidden tests leaks.
+GENERIC_TEST_HINT = {
+    "django/django": "You can run the affected tests yourself with: "
+                     "PYTHONPATH=. {env_python} tests/runtests.py <module> "
+                     "\u2014 pick the module(s) covering the code you "
+                     "changed.",
+    "sympy/sympy": "You can run the affected tests yourself with: "
+                   "{env_python} -m pytest <path> \u2014 pick the tests "
+                   "covering the code you changed.",
+    "matplotlib/matplotlib": "You can run the affected tests yourself with: "
+                             "{env_python} -m pytest <path> \u2014 pick the "
+                             "tests covering the code you changed.",
+}
+
+
+def runner_setup(task_id, info):
+    """The runner's override if any, else the scorer's setup + generic hint."""
+    if task_id in TASK_SETUP:
+        return TASK_SETUP[task_id]
+    setup = dict(scorer.task_setup(task_id, info))
+    if info["repo"] in GENERIC_TEST_HINT:
+        setup["test_hint"] = GENERIC_TEST_HINT[info["repo"]]
+    return setup
+
 
 # Per-arm configuration, keyed by --agent. Arms differ in extra CLI args
 # (the model) and scaffold. "direct" is the base prompt unchanged;
@@ -167,6 +196,8 @@ def load_task(task_id):
     ds = load_dataset("princeton-nlp/SWE-bench_Lite", split="test")
     task = next(x for x in ds if x["instance_id"] == task_id)
     return {
+        "repo": task["repo"],
+        "version": task["version"],
         "base_commit": task["base_commit"],
         "issue": task["problem_statement"],
     }
@@ -215,7 +246,7 @@ def main():
     args = ap.parse_args()
 
     info = load_task(args.task)
-    setup = TASK_SETUP[args.task]
+    setup = runner_setup(args.task, info)
     clone = ROOT / setup["clone"]
     python = ROOT / setup["python"]
     short = args.task.split("__")[-1]
@@ -232,7 +263,8 @@ def main():
     apply_overlay(setup, worktree)
 
     raw_hint = setup.get("test_hint")
-    test_hint = (raw_hint.format(python=python) if raw_hint
+    test_hint = (raw_hint.format(python=python, env_python=python)
+                 if raw_hint
                  else f"You may run tests with this Python: {python}")
     prompt = PROMPT_TEMPLATE.format(worktree=worktree, issue=info["issue"],
                                     test_hint=test_hint)
