@@ -166,6 +166,11 @@ def main():
     records = [json.loads(p.read_text())
                for p in sorted((ROOT / "results").glob("*.json"))]
     records = [r for r in records if not r.get("probe_prompt")]
+    # The fresh slice is reported separately, forever: split it out before
+    # any public-task table or aggregate is computed.
+    fresh = fresh_ids()
+    fresh_records = [r for r in records if r["task"] in fresh]
+    records = [r for r in records if r["task"] not in fresh]
     tasks = sorted({r["task"] for r in records})
 
     winners = {}  # task -> winning aggregate
@@ -227,6 +232,34 @@ def main():
     scope_section(records, tasks)
     reliability(records, tasks)
     factorial(records, tasks)
+    fresh_section(fresh_records, sorted(fresh))
+
+
+def fresh_ids():
+    index = ROOT / "tasks" / "fresh" / "index.json"
+    if not index.exists():
+        return set()
+    return {t["instance_id"] for t in json.loads(index.read_text())["tasks"]}
+
+
+def fresh_section(records, tasks):
+    """The post-cutoff fresh slice, apart from everything above: per-task
+    controls and any agent runs. Never part of the Portfolio."""
+    if not tasks:
+        return
+    index = json.loads((ROOT / "tasks" / "fresh" / "index.json").read_text())
+    print("\n" + "=" * 72)
+    print(f"\n# Fresh slice ({index['cutoff']}) - reported separately\n")
+    print("Held out from the Portfolio and every aggregate above.\n")
+    for task in tasks:
+        runs = [r for r in records if r["task"] == task]
+        print(f"## {task}\n")
+        print("| Run | Verdict | FAIL_TO_PASS | PASS_TO_PASS | Diff | Time "
+              "| Cost |")
+        print("|---|---|---|---|---|---|---|")
+        for r in sorted(runs, key=agent_name):
+            print(row(agent_name(r), r))
+        print()
 
 
 def no_regression(record):
