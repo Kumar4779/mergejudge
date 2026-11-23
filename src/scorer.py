@@ -48,14 +48,19 @@ REPO_SETUP = {
             "3.1": "envs/django31-py38/bin/python",
         },
     },
+    "sympy/sympy": {
+        "clone": "repos/sympy_src",
+        "strategy": "pytest",
+        # Python 3.9 + mpmath 1.3.0 + pytest serves both the 1.0 and 1.1
+        # version bands (base commits 2016-2017).
+        "python_by_version": {
+            "1.0": "envs/sympy-py39/bin/python",
+            "1.1": "envs/sympy-py39/bin/python",
+        },
+    },
 }
 
 TASK_SETUP = {
-    "sympy__sympy-11400": {
-        "clone": "repos/sympy_src",
-        "python": "envs/sympy-py39/bin/python",
-        "strategy": "pytest",
-    },
     "django__django-10914": {
         "clone": "repos/django_src",
         "python": "envs/django-py38/bin/python",
