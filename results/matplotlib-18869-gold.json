@@ -1,0 +1,20 @@
+{
+  "task": "matplotlib__matplotlib-18869",
+  "agent": "gold",
+  "files_touched": [
+    "lib/matplotlib/__init__.py"
+  ],
+  "diff_lines_added": 51,
+  "diff_lines_removed": 16,
+  "test_file_touched": false,
+  "grading_time_s": 3.9,
+  "fail_to_pass": {
+    "passed": 4,
+    "total": 4
+  },
+  "pass_to_pass_named": {
+    "passed": 3,
+    "total": 3
+  },
+  "verdict": "resolved"
+}

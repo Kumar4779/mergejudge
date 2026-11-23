@@ -38,6 +38,7 @@ from pathlib import Path
 from datasets import load_dataset
 
 import egress_proxy
+from scorer import apply_overlay
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENT_TIMEOUT_S = 30 * 60  # hard kill for the agent run (sandbox contract)
@@ -54,6 +55,16 @@ TASK_SETUP = {
         "python": "envs/django-py38/bin/python",
         "test_hint": "Run the affected tests from the repo root with: "
                      "PYTHONPATH=. {python} tests/runtests.py test_utils.tests",
+    },
+    "matplotlib__matplotlib-18869": {
+        "clone": "repos/matplotlib_src",
+        "python": "envs/matplotlib-py39/bin/python",
+        "test_hint": "Run the affected tests from the repo root with: "
+                     "PYTHONPATH=lib {python} -m pytest "
+                     "lib/matplotlib/tests/test_matplotlib.py",
+        # Same prebuilt compiled files the scorer copies in (see scorer.py).
+        "overlay": ("envs/matplotlib-py39/lib/python3.9/site-packages/"
+                    "matplotlib", "lib/matplotlib"),
     },
 }
 
@@ -218,6 +229,7 @@ def main():
 
     remove_worktree()
     materialize_base(clone, info["base_commit"], worktree)
+    apply_overlay(setup, worktree)
 
     raw_hint = setup.get("test_hint")
     test_hint = (raw_hint.format(python=python) if raw_hint

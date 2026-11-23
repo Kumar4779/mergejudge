@@ -1,7 +1,7 @@
 """MergeJudge scorer v2 - grade one agent patch for one SWE-bench task.
 
-The recipe (proven by hand on sympy-11400 on 2026-11-19 and on
-django-10914 on 2026-11-21):
+The recipe (proven by hand on sympy-11400 on 2026-11-19, on
+django-10914 on 2026-11-21 and on matplotlib-18869 on 2026-11-22):
   1. Fresh worktree at the task's base commit (clean checkout).
   2. Anti-cheat: a patch touching a test file or test config is
      disqualified before any test runs.
@@ -48,7 +48,32 @@ TASK_SETUP = {
         "python": "envs/django-py38/bin/python",
         "strategy": "django",
     },
+    "matplotlib__matplotlib-18869": {
+        "clone": "repos/matplotlib_src",
+        "python": "envs/matplotlib-py39/bin/python",
+        "strategy": "pytest",
+        # Tests must import the patched worktree's lib/, which has no
+        # compiled extensions; copy in the ones the env built from the
+        # base commit (plus the generated _version.py). All gitignored.
+        "pythonpath": "lib",
+        "overlay": ("envs/matplotlib-py39/lib/python3.9/site-packages/"
+                    "matplotlib", "lib/matplotlib"),
+    },
 }
+
+OVERLAY_PATTERNS = ("*.so", "_version.py")
+
+
+def apply_overlay(setup, worktree):
+    """Copy a task's prebuilt compiled files into a fresh worktree."""
+    if "overlay" not in setup:
+        return
+    src, dest = ROOT / setup["overlay"][0], worktree / setup["overlay"][1]
+    for pattern in OVERLAY_PATTERNS:
+        for f in src.rglob(pattern):
+            target = dest / f.relative_to(src)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, target)
 
 CONFIG_NAMES = {"conftest.py", "pytest.ini", "tox.ini", "setup.cfg"}
 
@@ -231,9 +256,12 @@ def grade(task_id, patch_path, agent):
                 key = lambda name: name
             else:
                 test_files = patch_files(info["test_patch"])
+                apply_overlay(setup, worktree)
+                env = (dict(os.environ, PYTHONPATH=setup["pythonpath"])
+                       if "pythonpath" in setup else None)
                 code, out = run([str(python), "-m", "pytest", *test_files,
                                  "-v", "--tb=no"], cwd=worktree,
-                                timeout=TEST_TIMEOUT_S)
+                                timeout=TEST_TIMEOUT_S, env=env)
                 status = {}
                 for nodeid, st in re.findall(
                         r"^(\S+::\S+)\s+(PASSED|FAILED|ERROR)",
