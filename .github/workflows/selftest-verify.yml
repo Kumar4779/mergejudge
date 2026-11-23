@@ -1,0 +1,38 @@
+name: Self-test verify action
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  gold-patch:
+    name: gold patch must resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          task: sympy__sympy-11400
+          patch: tasks/sympy-11400-gold_patch.diff
+
+  empty-patch:
+    name: empty patch must be not_resolved
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create an empty patch
+        run: ": > \"$RUNNER_TEMP/empty.diff\""
+      - id: verify
+        uses: ./
+        continue-on-error: true
+        with:
+          task: sympy__sympy-11400
+          patch: ${{ runner.temp }}/empty.diff
+      - name: Assert the action failed with not_resolved
+        env:
+          OUTCOME: ${{ steps.verify.outcome }}
+          VERDICT: ${{ steps.verify.outputs.verdict }}
+        run: |
+          echo "outcome=$OUTCOME verdict=$VERDICT"
+          test "$OUTCOME" = failure
+          test "$VERDICT" = not_resolved
