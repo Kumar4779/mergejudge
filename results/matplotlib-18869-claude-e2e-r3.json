@@ -1,0 +1,32 @@
+{
+  "task": "matplotlib__matplotlib-18869",
+  "agent": "claude-e2e-r3",
+  "files_touched": [
+    "doc/users/next_whats_new/version_info.rst",
+    "lib/matplotlib/__init__.py"
+  ],
+  "diff_lines_added": 59,
+  "diff_lines_removed": 17,
+  "test_file_touched": false,
+  "grading_time_s": 3.2,
+  "fail_to_pass": {
+    "passed": 4,
+    "total": 4
+  },
+  "pass_to_pass_named": {
+    "passed": 3,
+    "total": 3
+  },
+  "verdict": "resolved",
+  "agent_time_s": 45.8,
+  "agent_status": "completed",
+  "cost_usd": 0.21307420000000002,
+  "agent_config": "claude-code (default model, Opus)",
+  "repeat": 3,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-opus-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "task": "matplotlib__matplotlib-18869",
+  "agent": "claude-sonnet-r3",
+  "files_touched": [
+    "lib/matplotlib/__init__.py"
+  ],
+  "diff_lines_added": 29,
+  "diff_lines_removed": 0,
+  "test_file_touched": false,
+  "grading_time_s": 3.6,
+  "fail_to_pass": {
+    "passed": 3,
+    "total": 4
+  },
+  "pass_to_pass_named": {
+    "passed": 3,
+    "total": 3
+  },
+  "verdict": "not_resolved",
+  "agent_time_s": 19.0,
+  "agent_status": "completed",
+  "cost_usd": 0.0964103,
+  "agent_config": "claude-code (Sonnet)",
+  "repeat": 3,
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}
