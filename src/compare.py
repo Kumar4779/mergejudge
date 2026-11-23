@@ -19,7 +19,8 @@ Reads every results/*.json the scorer and runner wrote. For each task:
 Then a portfolio summary per family (tasks won, overall pass^1, expected
 spend = sum of per-task mean costs), plus an Oracle row that takes each
 task's winner, a reward-hacking rate per family (resolved runs with a
-hard-zero integrity scan / all attempts), and a reliability table: every run (repeats included) per
+hard-zero integrity scan / all attempts), diff scope against the gold
+patch (precision, recall, relative size), and a reliability table: every run (repeats included) per
 (task, family), with pass^k = C(resolved, k) / C(runs, k), and a 2x2
 factorial grid per task (scaffold x model family) over every run.
 
@@ -218,6 +219,7 @@ def main():
           f"| {expected_spend(winners.values(), len(winners))} |")
 
     integrity_table(records)
+    scope_section(records, tasks)
     reliability(records, tasks)
     factorial(records, tasks)
 
@@ -243,6 +245,61 @@ def integrity_table(records):
                      if o == "hard_zero" and r["verdict"] == "resolved")
         print(f"| {fam} | {len(runs)} | {scanned} | {soft} | {hacked} "
               f"| {hacked / len(runs):.3f} |")
+
+
+def scope(record, gold):
+    """Diff scope of a run against the task's gold patch: precision (share
+    of the run's files that are gold files), recall (share of gold files
+    the run touched) and relative size (run diff lines / gold diff lines,
+    added + removed, as everywhere else). None for an empty patch."""
+    files, gold_files = set(record.get("files_touched") or []), \
+        set(gold.get("files_touched") or [])
+    if not files or not gold_files:
+        return None
+    hit = len(files & gold_files)
+    return (hit / len(files), hit / len(gold_files),
+            diff_total(record) / diff_total(gold))
+
+
+def mean(values):
+    return sum(values) / len(values)
+
+
+def scope_row(label, scores):
+    if not scores:
+        return f"| {label} | 0 | — | — | — |"
+    p, r, size = zip(*scores)
+    return (f"| {label} | {len(scores)} | {mean(p):.3f} | {mean(r):.3f} "
+            f"| {mean(size):.2f}x |")
+
+
+def scope_section(records, tasks):
+    """Per-task and portfolio diff-scope means, direct families only, over
+    every run with a non-empty patch."""
+    header = ("| Family | Runs scored | Scope precision | Scope recall "
+              "| Relative diff size |\n|---|---|---|---|---|")
+    print("\n## Scope (direct runs with a non-empty patch, vs gold)\n")
+    portfolio = {}
+    for task in tasks:
+        runs = [r for r in records if r["task"] == task]
+        gold = next((r for r in runs if agent_name(r) == "gold"), None)
+        if gold is None:
+            continue
+        by_family = {}
+        for r in runs:
+            if agent_name(r) not in CONTROLS and scaffold(r) == "direct":
+                score = scope(r, gold)
+                if score is not None:
+                    by_family.setdefault(family(r), []).append(score)
+        print(f"### {task}\n\n{header}")
+        for fam in sorted(by_family):
+            print(scope_row(fam, by_family[fam]))
+            portfolio.setdefault(fam, []).extend(by_family[fam])
+        print()
+    print("### Portfolio scope (mean over every scored run)\n")
+    print(header)
+    for fam in sorted(portfolio):
+        print(scope_row(fam, portfolio[fam]))
 
 
 def pass_hat_k(runs, resolved, k):
