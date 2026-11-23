@@ -24,6 +24,10 @@ Coding agents will happily tell you "all tests pass" in an environment where the
 | django__django-10914 | gold (human fix) | resolved | 1/1 | 98/98 | +1 / −1 | — | — |
 | django__django-10914 | claude-e2e (runner) | resolved | 1/1 | 98/98 | +12 / −12 | 35.7s | $0.2247 |
 | django__django-10914 | claude-sonnet (runner) | resolved | 1/1 | 98/98 | +1 / −1 | 7.3s | $0.0762 |
+| matplotlib__matplotlib-18869 | none (baseline) | not_resolved | 0/4 | 3/3 | — | — | — |
+| matplotlib__matplotlib-18869 | gold (human fix) | resolved | 4/4 | 3/3 | +51 / −16 | — | — |
+| matplotlib__matplotlib-18869 | claude-e2e (runner) | resolved | 4/4 | 3/3 | +58 / −17 | 45.4s | $0.2255 |
+| matplotlib__matplotlib-18869 | claude-sonnet (runner) | resolved | 4/4 | 3/3 | +30 / −0 | 13.8s | $0.0730 |
 
 Every row is a JSON record in `results/`, with the agent's patch and trace log beside it. Gold is the dataset's human fix; none is the no-patch baseline control.
 
@@ -91,13 +95,13 @@ Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduc
 
 - **Test-pass is not mergeable.** On django-10914 the agent resolved the task (+12 / −12) but also edited three documentation files the one-line gold fix never touched. The tests can't see that; a reviewer would. MergeJudge records diff size on every run so the difference is visible instead of vibes.
 - **Convergence is not cheating — and we can prove which.** The sympy agent's patch matched a hand-produced patch line-for-line. The stream-json audit trace shows why: 4 tool calls, all inside its own worktree, no access to the saved answers. sympy-11400 is a well-known upstream fix; SWE-bench training-data contamination is a documented caveat that applies to every number here.
-- **Agents don't check their own work.** The audited sympy run edited the file and stopped — it never ran a single test on its fix. Whether an arm self-tests is a recorded dimension for future comparisons.
+- **Not every agent checks its own work — and checking doesn't save them.** Sonnet's direct runs edit and stop without running a single test on their fix; the default model usually runs the visible tests. The plan-first arms were forced to self-test and it changed no outcome: on sympy the visible tests passed while the hidden grading tests still failed. Self-verification is bounded by the coverage of the tests the agent can see.
 
 ## Threat model and limitations
 
 - Agent isolation is currently *procedural*: isolated temp worktree, prompt rules, and a complete tool-call audit log for every run. It is not yet OS-enforced; `sandbox-exec` isolation is the agreed gate before the dataset is scaled, because a determined agent with filesystem access could still wander.
 - Costs are API-equivalent estimates from the agent's own trace (`total_cost_usd`) on a Claude Pro subscription — useful for comparisons, not an invoice.
-- n = 2 tasks. These are verified results, not statistics. pass^k, held-out tasks, and confidence intervals arrive with scale, or not at all.
+- n = 3 tasks. These are verified results, not statistics. pass^k, held-out tasks, and confidence intervals arrive with scale, or not at all.
 
 ## Run it yourself
 
