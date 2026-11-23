@@ -247,6 +247,15 @@ There is no best arm — the winner depends on the task, and the task's repo pre
 
 The oracle figure is an expected spend, not a measured bill: the sum over tasks of each task's winning arm's mean cost per run — what one run per task costs a router that always picks the winner, the target a router aims at. Running both arms once on every task has an expected spend of $6.5904.
 
+**Diff scope.** Resolving is not the same as making the right change, so `compare.py` also scores every run's patch against the gold patch. *Scope precision* is the share of the files the agent touched that the gold fix also touches. *Scope recall* is the share of the gold fix's files the agent touched. *Relative size* is the agent's diff lines divided by gold's. Scoring the gold patch against itself gives 1.000 / 1.000 / 1.00x on all 22 tasks. Averaged over every scored direct run:
+
+| Family | Runs scored | Scope precision | Scope recall | Relative diff size |
+|---|---|---|---|---|
+| Claude (default model) · direct | 91 | 0.909 | 1.000 | 1.63x |
+| Claude Sonnet · direct | 90 | 0.889 | 0.911 | 0.89x |
+
+The default model always touches the gold files, but it writes about 1.6 times gold's diff and wanders beyond them. On django-10914 its first run touched four files, the one gold file plus three docs files: precision 0.250, with a diff 12 times gold's one-line change (+12 / −12 against +1 / −1). Across its four runs there, the mean is precision 0.312 at 8.25x, while Sonnet's six runs score 1.000 at 1.00x. Sonnet's lower recall is mostly where it fails: on sympy-11870 every Sonnet run edited `trigsimp.py` rather than the gold fix's `trigonometric.py`, for precision and recall of 0.000.
+
 ### Scaffold experiment: plan-first vs direct (2x2 factorial)
 
 Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduce the bug, state a plan, fix, then run the affected tests and iterate before finishing.
