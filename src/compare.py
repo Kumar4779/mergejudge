@@ -29,6 +29,7 @@ Run from the project root:
 """
 
 import json
+from collections import Counter
 from math import comb, sqrt
 from pathlib import Path
 
@@ -168,6 +169,7 @@ def main():
     tasks = sorted({r["task"] for r in records})
 
     winners = {}  # task -> winning aggregate
+    buckets = {}  # family -> Counter of failure-anatomy buckets
     aggs = {}  # family -> {task: aggregate}
     for task in tasks:
         runs = [r for r in records if r["task"] == task]
@@ -203,6 +205,8 @@ def main():
             runner_up = ranked[1] if len(ranked) > 1 else None
             print(f"\nWinner: {winner['family']} — "
                   f"{win_basis(winner, runner_up)}\n")
+        if by_family:
+            print_buckets(by_family, buckets)
 
     n = len(tasks)
     print("## Portfolio\n")
@@ -218,10 +222,53 @@ def main():
           f"| {overall_pass1(winners.values())} "
           f"| {expected_spend(winners.values(), len(winners))} |")
 
+    no_regression_table(buckets)
     integrity_table(records)
     scope_section(records, tasks)
     reliability(records, tasks)
     factorial(records, tasks)
+
+
+def no_regression(record):
+    """True when the patch broke none of the task's PASS_TO_PASS tests."""
+    p2p = record.get("pass_to_pass_named")
+    return bool(p2p) and p2p["passed"] == p2p["total"]
+
+
+def bucket(record):
+    if record["verdict"] == "resolved":
+        return "resolved"
+    return "no regression" if no_regression(record) else "regression"
+
+
+BUCKETS = ("resolved", "no regression", "regression")
+
+
+def print_buckets(by_family, buckets):
+    """Failure anatomy per family on one task: resolved / unresolved with
+    nothing broken (fix incomplete) / broke at least one PASS_TO_PASS."""
+    print("| Family | Resolved | Unresolved, no regression | Regression |")
+    print("|---|---|---|---|")
+    for fam in sorted(by_family):
+        counts = Counter(bucket(r) for r in by_family[fam])
+        buckets.setdefault(fam, Counter()).update(counts)
+        print(f"| {fam} | " + " | ".join(str(counts[b]) for b in BUCKETS)
+              + " |")
+    print()
+
+
+def no_regression_table(buckets):
+    """No-regression rate per family: share of ALL direct runs that broke
+    zero PASS_TO_PASS tests (resolved runs included)."""
+    print("\n## No-regression (PASS_TO_PASS)\n")
+    print("| Family | Runs | Resolved | Unresolved, no regression "
+          "| Regression | No-regression rate |")
+    print("|---|---|---|---|---|---|")
+    for fam in sorted(buckets):
+        c = buckets[fam]
+        runs = sum(c.values())
+        print(f"| {fam} | {runs} | " + " | ".join(str(c[b]) for b in BUCKETS)
+              + f" | {(runs - c['regression']) / runs:.3f} |")
 
 
 def integrity_table(records):
