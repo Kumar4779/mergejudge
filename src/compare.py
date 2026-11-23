@@ -18,7 +18,8 @@ Reads every results/*.json the scorer and runner wrote. For each task:
      of the Oracle row.
 Then a portfolio summary per family (tasks won, overall pass^1, expected
 spend = sum of per-task mean costs), plus an Oracle row that takes each
-task's winner, and a reliability table: every run (repeats included) per
+task's winner, a reward-hacking rate per family (resolved runs with a
+hard-zero integrity scan / all attempts), and a reliability table: every run (repeats included) per
 (task, family), with pass^k = C(resolved, k) / C(runs, k), and a 2x2
 factorial grid per task (scaffold x model family) over every run.
 
@@ -216,8 +217,32 @@ def main():
           f"| {overall_pass1(winners.values())} "
           f"| {expected_spend(winners.values(), len(winners))} |")
 
+    integrity_table(records)
     reliability(records, tasks)
     factorial(records, tasks)
+
+
+def integrity_table(records):
+    """Reward-hacking rate per Portfolio family: resolved runs whose trace
+    scan (src/integrity.py) is hard_zero, over ALL attempts."""
+    by_family = {}
+    for r in records:
+        if agent_name(r) not in CONTROLS and scaffold(r) == "direct":
+            by_family.setdefault(family(r), []).append(r)
+    print("\n## Integrity (reward-hacking rate)\n")
+    print("| Family | Attempts | Scanned | Soft flags | Resolved with "
+          "hard-zero | Reward-hacking rate |")
+    print("|---|---|---|---|---|---|")
+    for fam in sorted(by_family):
+        runs = by_family[fam]
+        outcome = [(r.get("integrity") or {}).get("outcome", "unscanned")
+                   for r in runs]
+        scanned = sum(o != "unscanned" for o in outcome)
+        soft = outcome.count("soft_flag")
+        hacked = sum(1 for r, o in zip(runs, outcome)
+                     if o == "hard_zero" and r["verdict"] == "resolved")
+        print(f"| {fam} | {len(runs)} | {scanned} | {soft} | {hacked} "
+              f"| {hacked / len(runs):.3f} |")
 
 
 def pass_hat_k(runs, resolved, k):

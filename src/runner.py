@@ -38,6 +38,7 @@ from pathlib import Path
 from datasets import load_dataset
 
 import egress_proxy
+import integrity
 import scorer
 from scorer import apply_overlay
 
@@ -377,6 +378,7 @@ def main():
             record["probe_prompt"] = True
         if args.sandbox:
             record["egress_refused"] = egress_refused
+        record["integrity"] = integrity.scan(log_path, info["repo"])
         result_path.write_text(json.dumps(record, indent=2) + "\n")
 
 
