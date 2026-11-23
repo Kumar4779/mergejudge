@@ -29,37 +29,48 @@ Every row is a JSON record in `results/`, with the agent's patch and trace log b
 
 ## Best-of-N: the first judged comparison
 
-MergeJudge exists to judge *between* agents, so the second arm matters more than the second task. Two Claude configurations now run every task — the default model (Opus) and Sonnet — with identical prompts and rules. `src/compare.py` ranks them per task: resolved first, then smaller diff, then lower cost. Gold and none are reference controls, never competitors.
+MergeJudge exists to judge *between* agents, so the second arm matters more than the second task. Two Claude configurations now run every task — the default model (Opus) and Sonnet — with identical prompts and rules. `src/compare.py` ranks them per task over every direct run each arm has made: highest pass^1 (resolved runs / runs) first, then smallest mean diff of the resolved runs, then lowest mean cost per run (failed runs cost money too). Gold and none are reference controls, never competitors.
+
+Ranking uses every run, reliability first: on matplotlib a single canonical run would have crowned an arm that resolves only half its runs, so no arm is ranked on one sample again.
 
 ### django__django-10914
 
-| Run | Verdict | FAIL_TO_PASS | PASS_TO_PASS | Diff | Time | Cost |
-|---|---|---|---|---|---|---|
-| Claude Sonnet | resolved | 1/1 | 98/98 | +1 / −1 | 7.3s | $0.0762 |
-| Claude (default model) | resolved | 1/1 | 98/98 | +12 / −12 | 35.7s | $0.2247 |
+| Family | Runs | Resolved | pass^1 | Mean diff (resolved) | Mean cost (all runs) |
+|---|---|---|---|---|---|
+| 1. Claude Sonnet · direct | 6 | 6 | 1.000 | 2.0 | $0.0662 |
+| 2. Claude (default model) · direct | 4 | 4 | 1.000 | 16.5 | $0.2113 |
 
-**Winner: Sonnet** — both resolved; Sonnet's patch is line-for-line the human gold fix, at a third of the cost and without the three docs files the default model's patch also edited.
+**Winner: Claude Sonnet · direct** — tie on pass^1 (1.000); won on diff: mean 2.0 vs 16.5 lines (resolved runs). All six of Sonnet's patches are line-for-line the human gold fix, at about a third of the cost; every default-model patch also edited two or three docs files the gold fix never touched.
 
 ### sympy__sympy-11400
 
-| Run | Verdict | FAIL_TO_PASS | PASS_TO_PASS | Diff | Time | Cost |
-|---|---|---|---|---|---|---|
-| Claude (default model) | resolved | 2/2 | 29/29 | +14 / −0 | 26.4s | $0.2156 |
-| Claude Sonnet | not_resolved | 0/2 | 29/29 | +8 / −0 | 8.8s | $0.0837 |
+| Family | Runs | Resolved | pass^1 | Mean diff (resolved) | Mean cost (all runs) |
+|---|---|---|---|---|---|
+| 1. Claude (default model) · direct | 7 | 7 | 1.000 | 14.0 | $0.1898 (5 of 7 costed) |
+| 2. Claude Sonnet · direct | 4 | 0 | 0.000 | — | $0.0836 |
 
-**Winner: the default model** — the only arm that resolved. Sonnet's patch added a sinc rewrite but no Relational support, and both target tests still failed.
+**Winner: Claude (default model) · direct** — won on reliability: pass^1 1.000 vs 0.000. Every Sonnet patch added a sinc rewrite but no Relational support, and both target tests failed every time.
+
+### matplotlib__matplotlib-18869
+
+| Family | Runs | Resolved | pass^1 | Mean diff (resolved) | Mean cost (all runs) |
+|---|---|---|---|---|---|
+| 1. Claude (default model) · direct | 4 | 4 | 1.000 | 76.0 | $0.2192 |
+| 2. Claude Sonnet · direct | 4 | 2 | 0.500 | 30.0 | $0.0836 |
+
+**Winner: Claude (default model) · direct** — won on reliability: pass^1 1.000 vs 0.500. Both failing Sonnet runs mishandled the same case: a `.post` version must count as a development build of the *next* release.
 
 ### Portfolio view
 
-| Strategy | Tasks resolved | Total cost |
-|---|---|---|
-| Always default model | 2/2 | $0.4403 |
-| Always Sonnet | 1/2 | $0.1599 |
-| Oracle (per-task winner) | 2/2 | $0.2918 |
+| Family | Tasks won | Overall pass^1 | Expected spend |
+|---|---|---|---|
+| Claude (default model) · direct | 2/3 | 1.000 (15/15) | $0.6203 |
+| Claude Sonnet · direct | 1/3 | 0.571 (8/14) | $0.2334 |
+| Oracle (per-task winner) | 3/3 | 1.000 (17/17) | $0.4752 |
 
-There is no best arm — the winner depends on the task. Picking the winner per task matches the strongest single arm's quality (2/2) for about two-thirds of its cost, while the cheapest arm alone is cheap precisely because it fails half the time. That gap between "always one agent" and "the right agent per task" is what AgentRouter is being built to capture — and every row above is its future training data. (Canonical run per family shown; the default model has resolved sympy in 3 of 3 runs so far — manual, e2e, and the audited e2e2.)
+There is no best arm — the winner depends on the task. Picking the winner per task matches the strongest single arm's reliability (pass^1 1.000) for about three-quarters of its expected spend, while the cheapest arm alone is cheap precisely because it fails 43% of its runs. That gap between "always one agent" and "the right agent per task" is what AgentRouter is being built to capture — and every run above is its future training data. (Aggregates cover every direct run of each arm; probe runs are excluded.)
 
-The oracle figure counts only the winning runs — it is the lower bound a router aims at; running every arm on both tasks cost $0.6002 in total.
+The oracle figure is an expected spend, not a measured bill: the sum over tasks of each task's winning arm's mean cost per run — what one run per task costs a router that always picks the winner, the target a router aims at. Running both arms once on every task has an expected spend of $0.8537.
 
 ### Scaffold experiment: plan-first vs direct (2x2 factorial)
 
