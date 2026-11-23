@@ -229,7 +229,7 @@ The check grades the patch against the task's real tests on a clean checkout and
 
 ## Roadmap
 
-- Dataset scale-up in progress: 14 tasks (django 12, sympy 1, matplotlib 1), rebalancing toward ~30 across repos.
+- Dataset scale-up in progress: 20 gradeable tasks (django 12, sympy 7, matplotlib 1), rebalancing toward ~30 across repos.
 - scikit-learn-10297 and astropy-12907 extraction still remaining.
 - Confidence intervals and a private holdout slice as the dataset grows.
 - A second *vendor* arm (Codex or Cursor CLI) once an API key exists.
