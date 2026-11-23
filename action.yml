@@ -1,0 +1,76 @@
+name: MergeJudge Verify
+description: >-
+  Grade a patch for a SWE-bench task the way MergeJudge does: apply it to a
+  clean checkout of the task's base commit, add the hidden test patch, run
+  the real tests, and pass only if the task's named tests resolve.
+  A patch that touches a test file or test config is disqualified.
+
+inputs:
+  task:
+    description: Task id from tasks/tasks.json, e.g. sympy__sympy-11400
+    required: true
+  patch:
+    description: Path to the patch file, relative to the workspace or absolute
+    required: true
+
+outputs:
+  verdict:
+    description: resolved, not_resolved, disqualified or error
+    value: ${{ steps.grade.outputs.verdict }}
+
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v6
+
+    - name: Set up MergeJudge and the task environment
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        TASK: ${{ inputs.task }}
+      run: |
+        uv venv -q --python 3.11 .venv
+        uv pip install -q --python .venv/bin/python "datasets==5.2.0"
+        bash ci/setup_task.sh "$TASK"
+
+    - name: Grade the patch on a clean checkout
+      id: grade
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        TASK: ${{ inputs.task }}
+        PATCH: ${{ inputs.patch }}
+      run: |
+        case "$PATCH" in
+          /*) patch_path="$PATCH" ;;
+          *)  patch_path="$GITHUB_WORKSPACE/$PATCH" ;;
+        esac
+        if [ ! -f "$patch_path" ]; then
+          echo "::error::Patch file not found: $patch_path"
+          echo "verdict=error" >> "$GITHUB_OUTPUT"
+          exit 1
+        fi
+        .venv/bin/python src/scorer.py --task "$TASK" --patch "$patch_path" --agent ci
+        .venv/bin/python - "$TASK" <<'PY'
+        import json, os, sys
+        task = sys.argv[1]
+        r = json.load(open(f"results/{task.split('__')[-1]}-ci.json"))
+        def counts(key):
+            c = r.get(key)
+            return f"{c['passed']}/{c['total']}" if c else "—"
+        verdict = r["verdict"]
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+            f.write(f"### MergeJudge Verify: `{task}`\n\n"
+                    "| Verdict | FAIL_TO_PASS | PASS_TO_PASS | Diff "
+                    "| Test file touched |\n|---|---|---|---|---|\n"
+                    f"| **{verdict}** | {counts('fail_to_pass')} "
+                    f"| {counts('pass_to_pass_named')} "
+                    f"| +{r['diff_lines_added']} / −{r['diff_lines_removed']} "
+                    f"| {'yes' if r['test_file_touched'] else 'no'} |\n")
+            if r.get("reason"):
+                f.write(f"\nReason: {r['reason']}\n")
+        with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+            f.write(f"verdict={verdict}\n")
+        print(f"MergeJudge verdict: {verdict}")
+        sys.exit(0 if verdict == "resolved" else 1)
+        PY
