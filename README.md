@@ -256,6 +256,7 @@ Two scaffolds x two models, every cell repeated. Plan-first arms had to reproduc
 - Agent runs execute under `sandbox-exec`: network is denied except a local proxy that only forwards to `api.anthropic.com`, the project tree is read-denied except `envs/`, and each agent repo is materialized as a single-commit, history-cut checkout of the task's base commit. An adversarial probe run that tried to read the answers found nothing.
 - Costs are API-equivalent estimates from the agent's own trace (`total_cost_usd`) on a Claude Pro subscription — useful for comparisons, not an invoice.
 - n = 20 tasks. These are verified results, not statistics. pass^1 figures now carry 95% Wilson intervals; held-out tasks are still to come.
+- scikit-learn grades in an x86_64 era environment under Rosetta because its 2018 stack predates Apple Silicon; all other repos grade natively.
 
 ## Run it yourself
 
@@ -283,7 +284,7 @@ The check grades the patch against the task's real tests on a clean checkout and
 
 ## Roadmap
 
-- Dataset scale-up in progress: 20 gradeable tasks (django 12, sympy 7, matplotlib 1), rebalancing toward ~30 across repos.
+- Dataset scale-up in progress: 21 gradeable tasks (django 12, sympy 7, matplotlib 1, scikit-learn 1), rebalancing toward ~30 across repos.
 - scikit-learn-10297 and astropy-12907 extraction still remaining.
 - Confidence intervals and a private holdout slice as the dataset grows.
 - A second *vendor* arm (Codex or Cursor CLI) once an API key exists.
