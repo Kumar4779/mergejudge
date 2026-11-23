@@ -115,6 +115,18 @@ python3 src/scorer.py --task django__django-10914 --patch tasks/django-10914-gol
 python3 src/runner.py --task django__django-10914 --agent claude-e2e
 ```
 
+## Run MergeJudge in your CI
+
+```yaml
+- uses: actions/checkout@v4
+- uses: Kumar4779/mergejudge@v1
+  with:
+    task: sympy__sympy-11400
+    patch: path/to/agent.patch
+```
+
+The check grades the patch against the task's real tests on a clean checkout and fails unless the task resolves, including when the patch touches a test file. CI environment setup currently covers `sympy__sympy-11400`; other tasks fail fast with a clear error until their recipe is added to `ci/setup_task.sh`.
+
 ## Roadmap
 
 - Remaining pinned tasks: astropy-12907, matplotlib-18869, scikit-learn-10297 — same recipe: extract, hand-validate both directions, then automated runs.
