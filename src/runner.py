@@ -183,6 +183,13 @@ def materialize_base(clone, base_commit, dest):
     The agent never gets the clone's history: no later commits (the real
     fix is one of them), no branches, no remotes, no shared objects.
     """
+    code, _ = run(["git", "-C", str(clone), "cat-file", "-e",
+                   f"{base_commit}^{{commit}}"])
+    if code != 0:  # e.g. a fresh-slice base newer than the clone
+        code, out = run(["git", "-C", str(clone), "fetch", "-q", "origin"])
+        if code != 0:
+            raise SystemExit(f"fetch for {base_commit} failed: "
+                             f"{out.strip()[-300:]}")
     dest.mkdir(parents=True)
     archive = subprocess.Popen(["git", "-C", str(clone), "archive",
                                 "--format=tar", base_commit],
@@ -204,6 +211,11 @@ def materialize_base(clone, base_commit, dest):
 
 
 def load_task(task_id):
+    # Fresh-slice tasks come from tasks/fresh/ through the scorer's record
+    # path (setup then resolves to FRESH_SETUP); public tasks from the
+    # dataset.
+    if task_id in scorer.fresh_ids():
+        return scorer.load_fresh(task_id)
     ds = load_dataset("princeton-nlp/SWE-bench_Lite", split="test")
     task = next(x for x in ds if x["instance_id"] == task_id)
     return {
