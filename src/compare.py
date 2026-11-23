@@ -6,12 +6,15 @@ Reads every results/*.json the scorer and runner wrote. For each task:
      gold and none are controls: shown for reference, never ranked.
      Adversarial probe runs (probe_prompt: true) are not data and are
      skipped entirely.
-  2. Pick one canonical run per (task, family): prefer a run with cost_usd
-     recorded, otherwise the first by agent name.
-  3. Rank canonical runs: resolved first, then fewest diff lines
-     (added + removed), then lowest cost (missing cost sorts last).
-     Only direct-scaffold families are ranked here and in the Portfolio.
-Then a portfolio summary per family, plus an Oracle line that takes each
+  2. Aggregate EVERY direct-scaffold run of a family on a task: runs,
+     resolved, pass^1 = resolved / runs, mean diff lines (added + removed)
+     of the resolved runs, and mean cost of all runs (failures cost too).
+  3. Rank families reliability first: highest pass^1, then lowest mean
+     diff of resolved runs, then lowest mean cost. No arm is ranked on a
+     single sample. Only direct-scaffold families are ranked here and in
+     the Portfolio.
+Then a portfolio summary per family (tasks won, overall pass^1, expected
+spend = sum of per-task mean costs), plus an Oracle row that takes each
 task's winner, and a reliability table: every run (repeats included) per
 (task, family), with pass^k = C(resolved, k) / C(runs, k), and a 2x2
 factorial grid per task (scaffold x model family) over every run.
@@ -63,12 +66,6 @@ def diff_total(record):
     return record.get("diff_lines_added", 0) + record.get("diff_lines_removed", 0)
 
 
-def rank_key(record):
-    cost = record.get("cost_usd")
-    return (record["verdict"] != "resolved", diff_total(record),
-            cost is None, cost or 0, agent_name(record))
-
-
 def fmt_counts(counts):
     return f"{counts['passed']}/{counts['total']}" if counts else "—"
 
@@ -89,26 +86,61 @@ def row(label, record):
             f"| {fmt_cost(record.get('cost_usd'))} |")
 
 
-def why_won(winner, runner_up):
-    if winner["verdict"] != "resolved":
+def aggregate(fam, runs):
+    resolved = [r for r in runs if r["verdict"] == "resolved"]
+    costs = [r["cost_usd"] for r in runs if r.get("cost_usd") is not None]
+    return {
+        "family": fam,
+        "runs": len(runs),
+        "resolved": len(resolved),
+        "pass1": len(resolved) / len(runs),
+        "mean_diff": (sum(diff_total(r) for r in resolved) / len(resolved)
+                      if resolved else None),
+        "mean_cost": sum(costs) / len(costs) if costs else None,
+        "costed": len(costs),
+    }
+
+
+def rank_key(agg):
+    inf = float("inf")
+    return (-agg["pass1"],
+            agg["mean_diff"] if agg["mean_diff"] is not None else inf,
+            agg["mean_cost"] if agg["mean_cost"] is not None else inf,
+            agg["family"])
+
+
+def fmt_diff(value):
+    return f"{value:.1f}" if value is not None else "—"
+
+
+def fmt_mean_cost(agg):
+    text = fmt_cost(agg["mean_cost"])
+    if agg["mean_cost"] is not None and agg["costed"] < agg["runs"]:
+        text += f" ({agg['costed']} of {agg['runs']} costed)"
+    return text
+
+
+def agg_row(rank, agg):
+    return (f"| {rank}. {agg['family']} | {agg['runs']} | {agg['resolved']} "
+            f"| {agg['pass1']:.3f} | {fmt_diff(agg['mean_diff'])} "
+            f"| {fmt_mean_cost(agg)} |")
+
+
+def win_basis(winner, runner_up):
+    if winner["resolved"] == 0:
         return "no arm resolved the task"
     if runner_up is None:
         return "only arm run"
-    if runner_up["verdict"] != "resolved":
-        return "only arm that resolved"
-    if diff_total(winner) != diff_total(runner_up):
-        return (f"both resolved; smaller diff "
-                f"({diff_total(winner)} vs {diff_total(runner_up)} lines)")
-    return (f"both resolved with equal diffs; lower cost "
-            f"({fmt_cost(winner.get('cost_usd'))} vs "
-            f"{fmt_cost(runner_up.get('cost_usd'))})")
-
-
-def canonical(runs):
-    # Reliability repeats (-rN) never displace an existing canonical run.
-    runs = [r for r in runs if r.get("repeat") is None] or runs
-    with_cost = [r for r in runs if r.get("cost_usd") is not None]
-    return sorted(with_cost or runs, key=agent_name)[0]
+    if winner["pass1"] != runner_up["pass1"]:
+        return (f"won on reliability: pass^1 {winner['pass1']:.3f} vs "
+                f"{runner_up['pass1']:.3f}")
+    if winner["mean_diff"] != runner_up["mean_diff"]:
+        return (f"tie on pass^1 ({winner['pass1']:.3f}); won on diff: mean "
+                f"{fmt_diff(winner['mean_diff'])} vs "
+                f"{fmt_diff(runner_up['mean_diff'])} lines (resolved runs)")
+    return (f"tie on pass^1 and diff; won on cost: mean "
+            f"{fmt_cost(winner['mean_cost'])} vs "
+            f"{fmt_cost(runner_up['mean_cost'])} per run")
 
 
 def main():
@@ -117,8 +149,8 @@ def main():
     records = [r for r in records if not r.get("probe_prompt")]
     tasks = sorted({r["task"] for r in records})
 
-    winners = {}
-    canon_by_family = {}  # family -> {task: canonical record}
+    winners = {}  # task -> winning aggregate
+    aggs = {}  # family -> {task: aggregate}
     for task in tasks:
         runs = [r for r in records if r["task"] == task]
         controls = [r for r in runs if agent_name(r) in CONTROLS]
@@ -128,36 +160,42 @@ def main():
             # scaffolds appear in the Reliability and Factorial sections.
             if agent_name(r) not in CONTROLS and scaffold(r) == "direct":
                 by_family.setdefault(family(r), []).append(r)
-        ranked = sorted((canonical(rs) for rs in by_family.values()),
+        ranked = sorted((aggregate(f, rs) for f, rs in by_family.items()),
                         key=rank_key)
 
         print(f"## {task}\n")
-        print("| Run | Verdict | FAIL_TO_PASS | PASS_TO_PASS | Diff | Time | Cost |")
-        print("|---|---|---|---|---|---|---|")
-        for i, r in enumerate(ranked, 1):
-            canon_by_family.setdefault(family(r), {})[task] = r
-            print(row(f"{i}. {family(r)} ({agent_name(r)})", r))
-        for r in sorted(controls, key=agent_name):
-            print(row(f"{agent_name(r)} (control)", r))
+        print("| Family | Runs | Resolved | pass^1 | Mean diff (resolved) "
+              "| Mean cost (all runs) |")
+        print("|---|---|---|---|---|---|")
+        for i, agg in enumerate(ranked, 1):
+            aggs.setdefault(agg["family"], {})[task] = agg
+            print(agg_row(i, agg))
+        if controls:
+            print("\n| Control | Verdict | FAIL_TO_PASS | PASS_TO_PASS "
+                  "| Diff | Time | Cost |")
+            print("|---|---|---|---|---|---|---|")
+            for r in sorted(controls, key=agent_name):
+                print(row(agent_name(r), r))
 
         if ranked:
             winner = ranked[0]
             winners[task] = winner
             runner_up = ranked[1] if len(ranked) > 1 else None
-            print(f"\nWinner: {family(winner)} ({agent_name(winner)}) — "
-                  f"{why_won(winner, runner_up)}\n")
+            print(f"\nWinner: {winner['family']} — "
+                  f"{win_basis(winner, runner_up)}\n")
 
     n = len(tasks)
     print("## Portfolio\n")
-    print("| Family | Tasks resolved | Total cost |")
-    print("|---|---|---|")
-    for fam in sorted(canon_by_family):
-        runs = canon_by_family[fam].values()
-        resolved = sum(r["verdict"] == "resolved" for r in runs)
-        print(f"| {fam} | {resolved}/{n} | {total_cost(runs)} |")
-    resolved = sum(r["verdict"] == "resolved" for r in winners.values())
-    print(f"| Oracle (per-task winner) | {resolved}/{n} "
-          f"| {total_cost(winners.values())} |")
+    print("| Family | Tasks won | Overall pass^1 | Expected spend |")
+    print("|---|---|---|---|")
+    for fam in sorted(aggs):
+        per_task = aggs[fam].values()
+        won = sum(1 for w in winners.values() if w["family"] == fam)
+        print(f"| {fam} | {won}/{n} | {overall_pass1(per_task)} "
+              f"| {expected_spend(per_task, n)} |")
+    print(f"| Oracle (per-task winner) | {len(winners)}/{n} "
+          f"| {overall_pass1(winners.values())} "
+          f"| {expected_spend(winners.values(), n)} |")
 
     reliability(records, tasks)
     factorial(records, tasks)
@@ -222,12 +260,20 @@ def factorial_cell(runs):
             f"mean {fmt_cost(sum(costs) / len(costs))}{note}")
 
 
-def total_cost(runs):
-    runs = list(runs)
-    costs = [r["cost_usd"] for r in runs if r.get("cost_usd") is not None]
-    missing = len(runs) - len(costs)
+def overall_pass1(per_task):
+    per_task = list(per_task)
+    runs = sum(a["runs"] for a in per_task)
+    resolved = sum(a["resolved"] for a in per_task)
+    return f"{resolved / runs:.3f} ({resolved}/{runs})"
+
+
+def expected_spend(per_task, n_tasks):
+    """Sum of per-task mean cost per run: the cost of one run per task."""
+    per_task = list(per_task)
+    costs = [a["mean_cost"] for a in per_task if a["mean_cost"] is not None]
     text = f"${sum(costs):.4f}"
-    return text + (f" ({missing} run(s) without cost)" if missing else "")
+    missing = n_tasks - len(costs)
+    return text + (f" ({missing} task(s) without cost)" if missing else "")
 
 
 if __name__ == "__main__":
