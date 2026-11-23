@@ -1,0 +1,43 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.7.12, pytest-3.10.1, py-1.11.0, pluggy-1.2.0 -- /Users/dheerajdevnani/Desktop/mergejudge/envs/scikit-learn-py37/bin/python
+rootdir: /Users/dheerajdevnani/Desktop/mergejudge/worktrees/handval-scikit-learn-10297, inifile: setup.cfg
+collecting ... collected 36 items
+
+sklearn/linear_model/tests/test_ridge.py::test_ridge PASSED              [  2%]
+sklearn/linear_model/tests/test_ridge.py::test_primal_dual_relationship PASSED [  5%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_singular PASSED     [  8%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_regression_sample_weights PASSED [ 11%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_sample_weights PASSED [ 13%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_shapes PASSED       [ 16%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_intercept PASSED    [ 19%]
+sklearn/linear_model/tests/test_ridge.py::test_toy_ridge_object PASSED   [ 22%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_vs_lstsq PASSED     [ 25%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_individual_penalties PASSED [ 27%]
+sklearn/linear_model/tests/test_ridge.py::test_dense_sparse::[0] PASSED  [ 30%]
+sklearn/linear_model/tests/test_ridge.py::test_dense_sparse::[1] PASSED  [ 33%]
+sklearn/linear_model/tests/test_ridge.py::test_dense_sparse::[2] PASSED  [ 36%]
+sklearn/linear_model/tests/test_ridge.py::test_dense_sparse::[3] PASSED  [ 38%]
+sklearn/linear_model/tests/test_ridge.py::test_dense_sparse::[4] PASSED  [ 41%]
+sklearn/linear_model/tests/test_ridge.py::test_dense_sparse::[5] PASSED  [ 44%]
+sklearn/linear_model/tests/test_ridge.py::test_dense_sparse::[6] PASSED  [ 47%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_cv_sparse_svd PASSED [ 50%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_sparse_svd PASSED   [ 52%]
+sklearn/linear_model/tests/test_ridge.py::test_class_weights PASSED      [ 55%]
+sklearn/linear_model/tests/test_ridge.py::test_class_weight_vs_sample_weight PASSED [ 58%]
+sklearn/linear_model/tests/test_ridge.py::test_class_weights_cv PASSED   [ 61%]
+sklearn/linear_model/tests/test_ridge.py::test_ridgecv_store_cv_values PASSED [ 63%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_classifier_cv_store_cv_values PASSED [ 66%]
+sklearn/linear_model/tests/test_ridge.py::test_ridgecv_sample_weight PASSED [ 69%]
+sklearn/linear_model/tests/test_ridge.py::test_raises_value_error_if_sample_weights_greater_than_1d PASSED [ 72%]
+sklearn/linear_model/tests/test_ridge.py::test_sparse_design_with_sample_weights PASSED [ 75%]
+sklearn/linear_model/tests/test_ridge.py::test_raises_value_error_if_solver_not_supported PASSED [ 77%]
+sklearn/linear_model/tests/test_ridge.py::test_sparse_cg_max_iter PASSED [ 80%]
+sklearn/linear_model/tests/test_ridge.py::test_n_iter PASSED             [ 83%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_fit_intercept_sparse PASSED [ 86%]
+sklearn/linear_model/tests/test_ridge.py::test_errors_and_values_helper PASSED [ 88%]
+sklearn/linear_model/tests/test_ridge.py::test_errors_and_values_svd_helper PASSED [ 91%]
+sklearn/linear_model/tests/test_ridge.py::test_ridge_classifier_no_support_multilabel PASSED [ 94%]
+sklearn/linear_model/tests/test_ridge.py::test_dtype_match PASSED        [ 97%]
+sklearn/linear_model/tests/test_ridge.py::test_dtype_match_cholesky PASSED [100%]
+
+==================== 36 passed, 40 warnings in 1.22 seconds ====================
