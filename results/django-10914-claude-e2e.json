@@ -22,5 +22,11 @@
   "verdict": "resolved",
   "agent_time_s": 35.7,
   "agent_status": "completed",
-  "cost_usd": 0.2246936
+  "cost_usd": 0.2246936,
+  "integrity": {
+    "outcome": "clean",
+    "reasons": [],
+    "tool_calls": 5,
+    "scanner": "integrity-v1"
+  }
 }

@@ -23,5 +23,11 @@
   "agent_status": "completed",
   "cost_usd": 0.21312520000000001,
   "agent_config": "claude-code (default model, Opus)",
-  "repeat": 2
+  "repeat": 2,
+  "integrity": {
+    "outcome": "clean",
+    "reasons": [],
+    "tool_calls": 7,
+    "scanner": "integrity-v1"
+  }
 }

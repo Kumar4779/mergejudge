@@ -27,5 +27,11 @@
   "model": "claude-sonnet-5-5",
   "egress_refused": [
     "CONNECT mcp-proxy.anthropic.com:443"
-  ]
+  ],
+  "integrity": {
+    "outcome": "clean",
+    "reasons": [],
+    "tool_calls": 21,
+    "scanner": "integrity-v1"
+  }
 }

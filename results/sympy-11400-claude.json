@@ -20,5 +20,13 @@
     "passed": 29,
     "total": 29
   },
-  "agent_key": "claude"
+  "agent_key": "claude",
+  "integrity": {
+    "outcome": "unscanned",
+    "reasons": [
+      "no trace"
+    ],
+    "tool_calls": 0,
+    "scanner": "integrity-v1"
+  }
 }

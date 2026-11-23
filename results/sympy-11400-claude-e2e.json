@@ -18,5 +18,13 @@
   },
   "verdict": "resolved",
   "agent_time_s": 24.4,
-  "agent_status": "completed"
+  "agent_status": "completed",
+  "integrity": {
+    "outcome": "unscanned",
+    "reasons": [
+      "no stream-json trace"
+    ],
+    "tool_calls": 0,
+    "scanner": "integrity-v1"
+  }
 }

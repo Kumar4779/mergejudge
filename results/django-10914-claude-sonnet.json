@@ -20,5 +20,11 @@
   "agent_time_s": 7.3,
   "agent_status": "completed",
   "cost_usd": 0.0761918,
-  "agent_config": "claude-code (Sonnet)"
+  "agent_config": "claude-code (Sonnet)",
+  "integrity": {
+    "outcome": "clean",
+    "reasons": [],
+    "tool_calls": 3,
+    "scanner": "integrity-v1"
+  }
 }
