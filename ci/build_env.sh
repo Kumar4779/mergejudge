@@ -45,6 +45,33 @@ case "$name" in
     echo "Built envs/$name (Python 3.7, x86_64): scikit-learn @ $base_commit"
     exit 0
     ;;
+  astropy-py39)
+    # astropy 4.3-band tasks (base commits from early 2022), native arm64.
+    # Pins resolved with --exclude-newer 2022-03-04, the day after the
+    # astropy-12907 base commit; Cython 0.29.22 is the base commit's own
+    # build pin, and pytest-astropy-header 0.2.0 is excluded by its
+    # setup.cfg. Resolved: numpy 1.22.2, pyerfa 2.0.0.1, PyYAML 6.0,
+    # packaging 21.3, setuptools 60.9.3, setuptools_scm 6.4.2,
+    # extension-helpers 0.1, pytest 7.0.1, pytest-astropy 0.9.0,
+    # pytest-astropy-header 0.1.2, hypothesis 6.39.1. astropy itself is
+    # built from repos/astropy_src at the base commit; the scorer copies
+    # its compiled .so files and _version.py into each grading worktree.
+    base_commit="d16bfe05a744909de4b27f5875fe0d4ed41ce607"
+    env="$PWD/envs/$name"
+    uv venv -q --allow-existing --python 3.9 "$env"
+    uv pip install -q --python "$env/bin/python" --exclude-newer 2022-03-04 \
+      "numpy==1.22.*" "pyerfa>=2.0" "PyYAML>=3.13" "packaging>=19.0" \
+      "setuptools<61" "setuptools_scm>=6.2" wheel cython==0.29.22 \
+      extension-helpers "pytest<7.1" "pytest-astropy>=0.9" \
+      "pytest-astropy-header!=0.2.0"
+    build="$PWD/worktrees/astropy-build"
+    git -C repos/astropy_src worktree add -q --detach "$build" "$base_commit"
+    (cd "$build" && uv pip install -q --python "$env/bin/python" \
+      --no-build-isolation --no-deps .)
+    git -C repos/astropy_src worktree remove --force "$build"
+    echo "Built envs/$name (Python 3.9): astropy @ $base_commit"
+    exit 0
+    ;;
   *)
     echo "No env recipe for $name" >&2
     exit 1
