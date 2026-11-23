@@ -243,7 +243,13 @@ def main():
         prompt += PROBE_INSTRUCTION
     cmd = build_command(args.cli, prompt, arm["args"])
 
-    env = None
+    # A fresh matplotlib config dir per run, beside the agent repo (not in
+    # it, or the patch would capture it), so matplotlib never writes
+    # ~/.matplotlib - which the sandbox denies anyway.
+    mplconfig = worktree.parent / f"mergejudge-{short}-{args.agent}-mplconfig"
+    shutil.rmtree(mplconfig, ignore_errors=True)
+    mplconfig.mkdir()
+    env = dict(os.environ, MPLCONFIGDIR=str(mplconfig))
     proxy = None
     profile_path = worktree.parent / f"mergejudge-{short}-{args.agent}.sb"
     if args.sandbox:
@@ -251,8 +257,7 @@ def main():
         port = proxy.server_address[1]
         profile_path.write_text(sandbox_profile(worktree, port))
         cmd = ["sandbox-exec", "-f", str(profile_path), *cmd]
-        env = dict(os.environ,
-                   HTTPS_PROXY=f"http://127.0.0.1:{port}",
+        env.update(HTTPS_PROXY=f"http://127.0.0.1:{port}",
                    HTTP_PROXY=f"http://127.0.0.1:{port}",
                    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1")
 
@@ -302,6 +307,7 @@ def main():
 
     if not args.keep:
         remove_worktree()
+        shutil.rmtree(mplconfig, ignore_errors=True)
 
     print(f"agent {args.agent}: status={status} time={agent_time_s}s "
           f"patch_lines={len(patch_text.splitlines())} log={log_path.name}")
