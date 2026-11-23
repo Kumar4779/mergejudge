@@ -1,0 +1,30 @@
+{
+  "task": "scikit-learn__scikit-learn-10297",
+  "agent": "claude-sonnet",
+  "files_touched": [
+    "sklearn/linear_model/ridge.py"
+  ],
+  "diff_lines_added": 9,
+  "diff_lines_removed": 2,
+  "test_file_touched": false,
+  "grading_time_s": 10.3,
+  "fail_to_pass": {
+    "passed": 1,
+    "total": 1
+  },
+  "pass_to_pass_named": {
+    "passed": 28,
+    "total": 28
+  },
+  "verdict": "resolved",
+  "agent_time_s": 12.8,
+  "agent_status": "completed",
+  "cost_usd": 0.07694279999999999,
+  "agent_config": "claude-code (Sonnet)",
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ]
+}
