@@ -1,0 +1,19 @@
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index 0a81861..bbe90c9 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -567,7 +567,13 @@ def convert_args(args) -> str:
+         # XXX: _print_Pow calls this routine with instances of Pow...
+         if isinstance(expr, Mul):
+             args = expr.args
+-            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
++            # Mul(1, Pow(n, -1)) is how the parser represents an
++            # unevaluated fraction 1/n; print it as a fraction.
++            is_unevaluated_reciprocal = (len(args) == 2 and args[0] is S.One
++                and isinstance(args[1], Pow) and args[1].exp is S.NegativeOne
++                and args[1].base.is_Integer)
++            if not is_unevaluated_reciprocal and (args[0] is S.One or
++                    any(isinstance(arg, Number) for arg in args[1:])):
+                 return convert_args(args)
+ 
+         include_parens = False

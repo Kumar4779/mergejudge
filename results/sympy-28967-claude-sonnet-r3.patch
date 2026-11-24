@@ -1,0 +1,19 @@
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index 0a81861..07deb57 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -567,7 +567,13 @@ def convert_args(args) -> str:
+         # XXX: _print_Pow calls this routine with instances of Pow...
+         if isinstance(expr, Mul):
+             args = expr.args
+-            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
++            # a Number divided by a Number, e.g. Mul(1, Pow(20, -1)), is
++            # printed as a fraction below
++            is_ratio = (len(args) == 2 and isinstance(args[0], Number) and
++                isinstance(args[1], Pow) and args[1].exp is S.NegativeOne and
++                isinstance(args[1].base, Number))
++            if not is_ratio and (args[0] is S.One or
++                    any(isinstance(arg, Number) for arg in args[1:])):
+                 return convert_args(args)
+ 
+         include_parens = False

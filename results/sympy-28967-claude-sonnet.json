@@ -1,0 +1,36 @@
+{
+  "task": "sympy__sympy-28967",
+  "agent": "claude-sonnet",
+  "files_touched": [
+    "sympy/printing/latex.py"
+  ],
+  "diff_lines_added": 5,
+  "diff_lines_removed": 1,
+  "test_file_touched": false,
+  "grading_time_s": 15.4,
+  "fail_to_pass": {
+    "passed": 0,
+    "total": 3
+  },
+  "pass_to_pass_named": {
+    "passed": 248,
+    "total": 248
+  },
+  "verdict": "not_resolved",
+  "agent_time_s": 20.6,
+  "agent_status": "completed",
+  "cost_usd": 0.07792489999999999,
+  "agent_config": "claude-code (Sonnet)",
+  "scaffold": "direct",
+  "sandbox": true,
+  "model": "claude-sonnet-5-5",
+  "egress_refused": [
+    "CONNECT mcp-proxy.anthropic.com:443"
+  ],
+  "integrity": {
+    "outcome": "clean",
+    "reasons": [],
+    "tool_calls": 3,
+    "scanner": "integrity-v2"
+  }
+}

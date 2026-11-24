@@ -1,0 +1,15 @@
+diff --git a/sympy/core/power.py b/sympy/core/power.py
+index cc9e900..b794d51 100644
+--- a/sympy/core/power.py
++++ b/sympy/core/power.py
+@@ -1134,6 +1134,10 @@ def as_real_imag(self, deep=True, **hints):
+             exp = self.exp
+             re_e, im_e = self.base.as_real_imag(deep=deep)
+             if not im_e:
++                if (exp.is_negative and not self.base.is_nonzero
++                        and not self.base.free_symbols):
++                    # base may be zero, giving zoo
++                    return S.NaN, S.NaN
+                 return self, S.Zero
+             a, b = symbols('a b', cls=Dummy)
+             if exp >= 0:
