@@ -1,0 +1,186 @@
+{
+  "seed": 20261123,
+  "note": "Local until the audit is complete; then published for reproducibility.",
+  "packets": {
+    "2V9TCD": {
+      "run": "django-11039-claude-e2e",
+      "task": "django__django-11039",
+      "stratum": "django",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "31BYPI": {
+      "run": "matplotlib-18869-claude-e2e-r2",
+      "task": "matplotlib__matplotlib-18869",
+      "stratum": "matplotlib",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "3GACNC": {
+      "run": "sympy-12419-claude-sonnet",
+      "task": "sympy__sympy-12419",
+      "stratum": "sympy",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "4CZXU7": {
+      "run": "sympy-28956-claude-sonnet-r2",
+      "task": "sympy__sympy-28956",
+      "stratum": "fresh",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "7N2XKH": {
+      "run": "matplotlib-18869-claude-sonnet-r1",
+      "task": "matplotlib__matplotlib-18869",
+      "stratum": "matplotlib",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "AB557I": {
+      "run": "sympy-28978-claude-e2e-r1",
+      "task": "sympy__sympy-28978",
+      "stratum": "fresh",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "BCCT5Y": {
+      "run": "sympy-11400-claude-e2e-r3",
+      "task": "sympy__sympy-11400",
+      "stratum": "sympy",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "CDG3SS": {
+      "run": "sympy-28967-claude-e2e",
+      "task": "sympy__sympy-28967",
+      "stratum": "fresh",
+      "arm": "default",
+      "verdict": "not_resolved"
+    },
+    "DDEYYG": {
+      "run": "django-11422-claude-sonnet-r1",
+      "task": "django__django-11422",
+      "stratum": "django",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "DERB1N": {
+      "run": "sympy-12171-claude-sonnet-r3",
+      "task": "sympy__sympy-12171",
+      "stratum": "sympy",
+      "arm": "sonnet",
+      "verdict": "not_resolved"
+    },
+    "DYHFW9": {
+      "run": "sympy-28978-claude-sonnet-r2",
+      "task": "sympy__sympy-28978",
+      "stratum": "fresh",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "HM8XKF": {
+      "run": "django-11049-claude-e2e",
+      "task": "django__django-11049",
+      "stratum": "django",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "HYJZ9X": {
+      "run": "django-10914-claude-e2e",
+      "task": "django__django-10914",
+      "stratum": "django",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "I0QOZ0": {
+      "run": "sympy-11870-claude-e2e-r1",
+      "task": "sympy__sympy-11870",
+      "stratum": "sympy",
+      "arm": "default",
+      "verdict": "not_resolved"
+    },
+    "IUGYPE": {
+      "run": "scikit-learn-10297-claude-sonnet",
+      "task": "scikit-learn__scikit-learn-10297",
+      "stratum": "scikit-learn",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "J0FZGM": {
+      "run": "django-11283-claude-sonnet-r2",
+      "task": "django__django-11283",
+      "stratum": "django",
+      "arm": "sonnet",
+      "verdict": "not_resolved"
+    },
+    "K8V8W5": {
+      "run": "astropy-12907-claude-sonnet-r3",
+      "task": "astropy__astropy-12907",
+      "stratum": "astropy",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "O2KCY1": {
+      "run": "django-11001-claude-sonnet-r3",
+      "task": "django__django-11001",
+      "stratum": "django",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "QXTPUZ": {
+      "run": "astropy-12907-claude-e2e-r3",
+      "task": "astropy__astropy-12907",
+      "stratum": "astropy",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "RSSU4T": {
+      "run": "django-10924-claude-sonnet-r2",
+      "task": "django__django-10924",
+      "stratum": "django",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    },
+    "S5S2FL": {
+      "run": "scikit-learn-10297-claude-e2e-r2",
+      "task": "scikit-learn__scikit-learn-10297",
+      "stratum": "scikit-learn",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "TI6TWK": {
+      "run": "sympy-29032-claude-e2e-r1",
+      "task": "sympy__sympy-29032",
+      "stratum": "fresh",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "YFLOHK": {
+      "run": "sympy-12419-claude-e2e",
+      "task": "sympy__sympy-12419",
+      "stratum": "sympy",
+      "arm": "default",
+      "verdict": "resolved"
+    },
+    "ZTPCQP": {
+      "run": "sympy-12236-claude-sonnet",
+      "task": "sympy__sympy-12236",
+      "stratum": "sympy",
+      "arm": "sonnet",
+      "verdict": "resolved"
+    }
+  },
+  "calibration_set": [
+    "DERB1N",
+    "IUGYPE",
+    "31BYPI",
+    "BCCT5Y",
+    "HYJZ9X",
+    "CDG3SS",
+    "J0FZGM",
+    "RSSU4T",
+    "4CZXU7",
+    "QXTPUZ"
+  ]
+}

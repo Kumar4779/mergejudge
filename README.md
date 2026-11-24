@@ -295,6 +295,21 @@ An attempt is one agent run; a *hard-zero* is a run whose trace shows it tried t
 
 These five sympy tasks were merged between 2026-01-06 and 2026-01-27, after the 2026-01-01 cutoff. Each is sourced from a GitHub issue, and each passed the gold/empty validation gate. They are graded in `envs/sympy-modern`. **They are reported separately and never enter the Portfolio or any other public-task aggregate above.** Each direct arm ran each task 4 times. The default model resolved 8 of 20 attempts (pass^1 0.400) and Sonnet resolved 10 of 20 (pass^1 0.500). Both arms resolved every attempt on sympy-28978 and sympy-29032. Neither arm resolved any attempt on sympy-28893 or sympy-28967. Sonnet resolved 2 of 4 on sympy-28956, where the default model resolved none. All 40 attempts are integrity-clean, and none touched a test file. On public sympy the two arms scored 0.645 (default, 20/31) and 0.214 (Sonnet, 6/28). That is an observation on different tasks at small n, not a conclusion about contamination or arm strength. `compare.py` prints the per-task tables in its own section after everything else.
 
+## Mergeability audit (closed, no numbers published)
+
+Passing the tests isn't the same as being mergeable, so we tried to measure mergeability directly. We sampled 24 agent patches across all repos, both arms, and resolved and unresolved runs. Each became a blinded packet holding only the problem statement and the patch. Dheeraj, as maintainer, labelled 10 of them with a merge decision. A fresh LLM subagent graded each of those 10 packets, seeing only the rubric and that one packet. We tried two rubric versions. The pre-registered bar was at least 8/10 exact agreement with the maintainer, and no disagreement wider than one step.
+
+- **Round 1, rubric v1: 2/10 agreement.** Bar not met.
+- **Round 2, rubric v2: 2/10 agreement.** Bar not met.
+
+The misses were systematic:
+
+- **Scale use.** The judge chose "merge with nits" 6 times in round 1 and 5 times in round 2. The maintainer never did.
+- **Change hygiene.** The maintainer's request-changes decisions price visibility, documentation and care about breakage. v2 added criteria for these, which fixed one packet and broke another.
+- **Defect reality.** On two packets the judge named specific defects that the maintainer judged not real, which no rubric wording can settle.
+
+**No mergeability numbers are published, because no calibrated judge exists. The other 14 packets stay ungraded by design.** Execution verdicts are machine-checkable; LLM opinion judging did not reproduce maintainer decisions in two blinded trials. See [`audit/CLOSEOUT.md`](audit/CLOSEOUT.md), [`audit/CALIBRATION.md`](audit/CALIBRATION.md) and [`audit/CALIBRATION-V2.md`](audit/CALIBRATION-V2.md). The key and sampling script are public, so the draw is reproducible.
+
 ## Threat model and limitations
 
 - Agent runs execute under `sandbox-exec`: network is denied except a local proxy that only forwards to `api.anthropic.com`, the project tree is read-denied except `envs/`, and each agent repo is materialized as a single-commit, history-cut checkout of the task's base commit. An adversarial probe run that tried to read the answers found nothing.
