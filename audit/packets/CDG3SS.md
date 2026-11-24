@@ -1,0 +1,55 @@
+# Packet CDG3SS
+
+## Problem statement
+
+'(1/20)**(1/30)' and '(1/1)**(1/1)' produce unexpected results
+
+```py
+from sympy import S, latex
+from IPython.display import display, Math
+def show(x, n) -> str:
+    return display(Math(latex(S(f"({x})**({n})", evaluate=False))))
+```
+---
+#### Unexpected Format
+```py
+show('1/10','1/20')
+show('1/1','1/1')
+```
+
+![Image](https://github.com/user-attachments/assets/4b226d82-df1a-461f-b48b-95c6db03cded)
+---
+
+#### Expected Format
+```py
+show('10/1','20/1')
+show('2','3/2')
+show('-2','3/2')
+```
+
+![Image](https://github.com/user-attachments/assets/5eb42fad-dc5d-47c9-af77-3fd121f14de1)
+
+---
+
+## Patch
+
+```diff
+diff --git a/sympy/printing/latex.py b/sympy/printing/latex.py
+index 0a81861..d671243 100644
+--- a/sympy/printing/latex.py
++++ b/sympy/printing/latex.py
+@@ -567,7 +567,12 @@ def convert_args(args) -> str:
+         # XXX: _print_Pow calls this routine with instances of Pow...
+         if isinstance(expr, Mul):
+             args = expr.args
+-            if args[0] is S.One or any(isinstance(arg, Number) for arg in args[1:]):
++            # 1/x is parsed as Mul(1, Pow(x, -1)); print it as a fraction
++            is_one_over = (len(args) == 2 and args[0] is S.One
++                           and isinstance(args[1], Pow)
++                           and args[1].exp is S.NegativeOne)
++            if not is_one_over and (args[0] is S.One or
++                    any(isinstance(arg, Number) for arg in args[1:])):
+                 return convert_args(args)
+ 
+         include_parens = False
+```

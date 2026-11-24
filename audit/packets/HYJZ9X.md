@@ -1,0 +1,98 @@
+# Packet HYJZ9X
+
+## Problem statement
+
+Set default FILE_UPLOAD_PERMISSION to 0o644.
+Description
+	
+Hello,
+As far as I can see, the ​File Uploads documentation page does not mention any permission issues.
+What I would like to see is a warning that in absence of explicitly configured FILE_UPLOAD_PERMISSIONS, the permissions for a file uploaded to FileSystemStorage might not be consistent depending on whether a MemoryUploadedFile or a TemporaryUploadedFile was used for temporary storage of the uploaded data (which, with the default FILE_UPLOAD_HANDLERS, in turn depends on the uploaded data size).
+The tempfile.NamedTemporaryFile + os.rename sequence causes the resulting file permissions to be 0o0600 on some systems (I experience it here on CentOS 7.4.1708 and Python 3.6.5). In all probability, the implementation of Python's built-in tempfile module explicitly sets such permissions for temporary files due to security considerations.
+I found mentions of this issue ​on GitHub, but did not manage to find any existing bug report in Django's bug tracker.
+
+## Patch
+
+```diff
+diff --git a/django/conf/global_settings.py b/django/conf/global_settings.py
+index acee9887d2..bdeec80610 100644
+--- a/django/conf/global_settings.py
++++ b/django/conf/global_settings.py
+@@ -304,7 +304,7 @@ FILE_UPLOAD_TEMP_DIR = None
+ 
+ # The numeric mode to set newly-uploaded files to. The value should be a mode
+ # you'd pass directly to os.chmod; see https://docs.python.org/library/os.html#files-and-directories.
+-FILE_UPLOAD_PERMISSIONS = None
++FILE_UPLOAD_PERMISSIONS = 0o644
+ 
+ # The numeric mode to assign to newly-created directories, when uploading files.
+ # The value should be a mode as you'd pass to os.chmod;
+diff --git a/docs/howto/deployment/checklist.txt b/docs/howto/deployment/checklist.txt
+index c31bcac62a..b307076b62 100644
+--- a/docs/howto/deployment/checklist.txt
++++ b/docs/howto/deployment/checklist.txt
+@@ -154,16 +154,6 @@ server never attempts to interpret them. For instance, if a user uploads a
+ 
+ Now is a good time to check your backup strategy for these files.
+ 
+-:setting:`FILE_UPLOAD_PERMISSIONS`
+-----------------------------------
+-
+-With the default file upload settings, files smaller than
+-:setting:`FILE_UPLOAD_MAX_MEMORY_SIZE` may be stored with a different mode
+-than larger files as described in :setting:`FILE_UPLOAD_PERMISSIONS`.
+-
+-Setting :setting:`FILE_UPLOAD_PERMISSIONS` ensures all files are uploaded with
+-the same permissions.
+-
+ HTTPS
+ =====
+ 
+diff --git a/docs/ref/settings.txt b/docs/ref/settings.txt
+index 46e99af993..6e80c8bcb4 100644
+--- a/docs/ref/settings.txt
++++ b/docs/ref/settings.txt
+@@ -1484,13 +1484,13 @@ This value mirrors the functionality and caveats of the
+ ``FILE_UPLOAD_PERMISSIONS``
+ ---------------------------
+ 
+-Default: ``None``
++Default: ``0o644``
+ 
+ The numeric mode (i.e. ``0o644``) to set newly uploaded files to. For
+ more information about what these modes mean, see the documentation for
+ :func:`os.chmod`.
+ 
+-If this isn't given or is ``None``, you'll get operating-system
++If ``None``, you'll get operating-system
+ dependent behavior. On most platforms, temporary files will have a mode
+ of ``0o600``, and files saved from memory will be saved using the
+ system's standard umask.
+@@ -1511,6 +1511,10 @@ when using the :djadmin:`collectstatic` management command. See
+     way that modes must be specified. If you try to use ``644``, you'll
+     get totally incorrect behavior.
+ 
++.. versionchanged:: 3.0
++
++    In older versions, the default value is ``None``.
++
+ .. setting:: FILE_UPLOAD_TEMP_DIR
+ 
+ ``FILE_UPLOAD_TEMP_DIR``
+diff --git a/docs/releases/3.0.txt b/docs/releases/3.0.txt
+index 5d9bff086e..528ef8e3fa 100644
+--- a/docs/releases/3.0.txt
++++ b/docs/releases/3.0.txt
+@@ -287,6 +287,11 @@ Django 3.0, we're removing these APIs at this time.
+ Miscellaneous
+ -------------
+ 
++* The default value of the :setting:`FILE_UPLOAD_PERMISSIONS` setting is
++  changed from ``None`` to ``0o644`` to ensure consistent file permissions
++  regardless of whether uploaded files are stored in memory or as temporary
++  files. Set it to ``None`` to restore the previous behavior.
++
+ * ``ContentType.__str__()`` now includes the model's ``app_label`` to
+   disambiguate model's with the same name in different apps.
+ 
+```
